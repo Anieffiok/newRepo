@@ -15,20 +15,24 @@ import asyncHandler from "../../utils/asyncHandler.js";
 
 const router = Router();
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: {
-    success: false,
-    error: {
-      code: "RATE_LIMITED",
-      message:
-        "Too many authentication attempts. Please try again in 15 minutes.",
-    },
-  },
-});
+// Stricter rate limiting for auth endpoints (disabled in test environment)
+const authLimiter =
+  process.env.NODE_ENV === "test"
+    ? (req, res, next) => next() // Dummy pass-through middleware
+    : rateLimit({
+        windowMs: 15 * 60 * 1000,
+        max: 10,
+        standardHeaders: true,
+        legacyHeaders: false,
+        message: {
+          success: false,
+          error: {
+            code: "RATE_LIMITED",
+            message:
+              "Too many authentication attempts. Please try again in 15 minutes.",
+          },
+        },
+      });
 
 /**
  * @swagger

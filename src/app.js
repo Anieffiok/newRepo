@@ -36,22 +36,24 @@ app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(cookieParser());
 
-// 5. Rate limiting
-app.use(
-  rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: {
-      success: false,
-      error: {
-        code: "RATE_LIMITED",
-        message: "Too many requests, please try again later",
+// 5. Rate limiting (Disabled during automated testing to prevent 429 errors)
+if (env.nodeEnv !== "test") {
+  app.use(
+    rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 100,
+      standardHeaders: true,
+      legacyHeaders: false,
+      message: {
+        success: false,
+        error: {
+          code: "RATE_LIMITED",
+          message: "Too many requests, please try again later",
+        },
       },
-    },
-  }),
-);
+    }),
+  );
+}
 
 // Swagger API Documentation (only in development and staging)
 if (env.nodeEnv !== "production") {
