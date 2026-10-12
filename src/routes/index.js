@@ -1,5 +1,6 @@
 import { Router } from "express";
 import authRoutes from "../modules/auth/auth.routes.js";
+import userRoutes from "../modules/users/user.routes.js";
 import profileRoutes from "../modules/profile/profile.routes.js";
 import educationRoutes from "../modules/education/education.routes.js";
 import experienceRoutes from "../modules/experience/experience.routes.js";
@@ -11,6 +12,7 @@ import skillRoutes from "../modules/skills/skills.routes.js";
 const router = Router();
 
 router.use("/auth", authRoutes);
+router.use("/users", userRoutes);
 router.use("/profile", profileRoutes);
 router.use("/profile/education", educationRoutes);
 router.use("/profile/experience", experienceRoutes);
