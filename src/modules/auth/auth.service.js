@@ -1,10 +1,12 @@
 import { Op } from "sequelize";
+import crypto from "node:crypto";
 import {
   sequelize,
   User,
   Profile,
   RefreshToken,
   PasswordResetToken,
+  EmailVerificationToken,
 } from "../../database/models/index.js";
 import { hashPassword, verifyPassword } from "../../utils/password.js";
 import {
@@ -12,11 +14,16 @@ import {
   generateRefreshToken,
   hashToken,
 } from "../../utils/tokens.js";
-import { sendPasswordResetEmail } from "../../utils/email.js";
+import {
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+} from "../../utils/email.js";
 import ApiError from "../../utils/ApiError.js";
 import env from "../../config/env.js";
-import crypto from "node:crypto";
 
+/**
+ * Register a new user, create an empty profile, and generate a verification token
+ */
 export async function register({ email, password, firstName, lastName }) {
   const existingUser = await User.findOne({ where: { email } });
   if (existingUser) {
@@ -28,6 +35,12 @@ export async function register({ email, password, firstName, lastName }) {
   }
 
   const passwordHash = await hashPassword(password);
+
+  // Generate verification token (expires in 24 hours)
+  const rawVerificationToken = crypto.randomBytes(32).toString("hex");
+  const verificationTokenHash = hashToken(rawVerificationToken);
+  const verificationExpiresAt = new Date();
+  verificationExpiresAt.setHours(verificationExpiresAt.getHours() + 24);
 
   const result = await sequelize.transaction(async (t) => {
     const user = await User.create(
@@ -47,20 +60,38 @@ export async function register({ email, password, firstName, lastName }) {
       { transaction: t },
     );
 
+    await EmailVerificationToken.create(
+      {
+        userId: user.id,
+        tokenHash: verificationTokenHash,
+        expiresAt: verificationExpiresAt,
+      },
+      { transaction: t },
+    );
+
     return { user, profile };
   });
 
+  // Send verification email asynchronously (do not block registration response if SMTP fails)
+  const verificationUrl = `${env.frontendUrl}/verify-email?token=${rawVerificationToken}`;
+  sendVerificationEmail({
+    to: result.user.email,
+    firstName: result.user.firstName,
+    verificationUrl,
+  });
+
+  // Generate session tokens
   const payload = { id: result.user.id, email: result.user.email };
   const accessToken = generateAccessToken(payload);
   const rawRefreshToken = generateRefreshToken();
 
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 7);
+  const refreshExpiresAt = new Date();
+  refreshExpiresAt.setDate(refreshExpiresAt.getDate() + 7);
 
   await RefreshToken.create({
     userId: result.user.id,
     tokenHash: hashToken(rawRefreshToken),
-    expiresAt,
+    expiresAt: refreshExpiresAt,
   });
 
   const userJson = result.user.toJSON();
@@ -71,6 +102,95 @@ export async function register({ email, password, firstName, lastName }) {
     accessToken,
     refreshToken: rawRefreshToken,
   };
+}
+
+/**
+ * Verify user email using token
+ */
+export async function verifyEmail(rawToken) {
+  const tokenHash = hashToken(rawToken);
+
+  // 1. Look up the token
+  const tokenRecord = await EmailVerificationToken.findOne({
+    where: { tokenHash },
+    include: [{ model: User, as: "user" }],
+  });
+
+  // Token does not exist or was already used
+  if (!tokenRecord || tokenRecord.usedAt !== null) {
+    throw new ApiError(
+      400,
+      "TOKEN_INVALID",
+      "The verification link is invalid or has already been used.",
+    );
+  }
+
+  // Token expired
+  if (tokenRecord.expiresAt < new Date()) {
+    throw new ApiError(
+      400,
+      "TOKEN_EXPIRED",
+      "The verification link has expired. Please request a new one.",
+    );
+  }
+
+  // Mark token used and set emailVerified = true in a transaction
+  await sequelize.transaction(async (t) => {
+    await tokenRecord.update({ usedAt: new Date() }, { transaction: t });
+    await User.update(
+      { emailVerified: true },
+      { where: { id: tokenRecord.userId }, transaction: t },
+    );
+  });
+}
+
+/**
+ * Resend verification email
+ */
+export async function resendVerification(email) {
+  const user = await User.findOne({ where: { email } });
+
+  // Privacy protection: Return silently if user doesn't exist or is already verified
+  if (!user || user.emailVerified) {
+    return;
+  }
+
+  const rawVerificationToken = crypto.randomBytes(32).toString("hex");
+  const tokenHash = hashToken(rawVerificationToken);
+
+  const expiresAt = new Date();
+  expiresAt.setHours(expiresAt.getHours() + 24);
+
+  await sequelize.transaction(async (t) => {
+    // Invalidate old unused tokens
+    await EmailVerificationToken.update(
+      { usedAt: new Date() },
+      {
+        where: {
+          userId: user.id,
+          usedAt: null,
+        },
+        transaction: t,
+      },
+    );
+
+    // Create fresh token
+    await EmailVerificationToken.create(
+      {
+        userId: user.id,
+        tokenHash,
+        expiresAt,
+      },
+      { transaction: t },
+    );
+  });
+
+  const verificationUrl = `${env.frontendUrl}/verify-email?token=${rawVerificationToken}`;
+  await sendVerificationEmail({
+    to: user.email,
+    firstName: user.firstName,
+    verificationUrl,
+  });
 }
 
 export async function login({ email, password }) {
@@ -84,7 +204,7 @@ export async function login({ email, password }) {
     throw new ApiError(
       401,
       "UNAUTHORIZED",
-      "Account is suspended or deactivated",
+      "This account is not active. Contact Rovia support.",
     );
   }
 

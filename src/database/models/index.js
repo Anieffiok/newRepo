@@ -1,5 +1,6 @@
 import sequelize from "../../config/sequelize.js";
 import User from "./user.model.js";
+import EmailVerificationToken from "./emailVerificationToken.model.js";
 import Profile from "./profile.model.js";
 import RefreshToken from "./refreshToken.model.js";
 import PasswordResetToken from "./passwordResetToken.model.js";
@@ -38,6 +39,16 @@ User.hasMany(PasswordResetToken, {
   onDelete: "CASCADE",
 });
 PasswordResetToken.belongsTo(User, { foreignKey: "userId", as: "user" });
+
+User.hasMany(EmailVerificationToken, {
+  foreignKey: "userId",
+  as: "emailVerificationTokens",
+  onDelete: "CASCADE",
+});
+EmailVerificationToken.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
 
 // ==========================================
 // 3. User & Education (1:N)
@@ -128,6 +139,7 @@ Interest.hasMany(UserInterest, {
 export {
   sequelize,
   User,
+  EmailVerificationToken,
   Profile,
   RefreshToken,
   PasswordResetToken,
@@ -144,6 +156,7 @@ export {
 export default {
   sequelize,
   User,
+  EmailVerificationToken,
   Profile,
   RefreshToken,
   PasswordResetToken,

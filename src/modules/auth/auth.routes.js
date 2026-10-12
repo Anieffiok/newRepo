@@ -7,6 +7,8 @@ import {
   refreshValidator,
   forgotPasswordValidator,
   resetPasswordValidator,
+  verifyEmailValidator,
+  resendVerificationValidator,
 } from "./auth.validator.js";
 import validate from "../../middleware/validate.js";
 import asyncHandler from "../../utils/asyncHandler.js";
@@ -231,6 +233,70 @@ router.post(
   resetPasswordValidator,
   validate,
   asyncHandler(authController.resetPassword),
+);
+
+/**
+ * @swagger
+ * /auth/verify-email:
+ *   post:
+ *     summary: Verify email address
+ *     description: Confirms a user's email using the token received in the verification email.
+ *     tags: [Authentication]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *             properties:
+ *               token:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Email verified successfully
+ *       400:
+ *         description: Token invalid (TOKEN_INVALID) or expired (TOKEN_EXPIRED)
+ */
+router.post(
+  "/verify-email",
+  verifyEmailValidator,
+  validate,
+  asyncHandler(authController.verifyEmail),
+);
+
+/**
+ * @swagger
+ * /auth/resend-verification:
+ *   post:
+ *     summary: Resend email verification link
+ *     description: Generates a new verification link and sends it to the user's email.
+ *     tags: [Authentication]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: Verification email sent if eligible
+ */
+router.post(
+  "/resend-verification",
+  authLimiter,
+  resendVerificationValidator,
+  validate,
+  asyncHandler(authController.resendVerification),
 );
 
 export default router;

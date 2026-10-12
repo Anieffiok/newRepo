@@ -89,3 +89,24 @@ export async function resetPassword(req, res) {
       "Password has been reset successfully. Please log in with your new password.",
   });
 }
+
+export async function verifyEmail(req, res) {
+  await authService.verifyEmail(req.body.token);
+
+  return res.status(200).json({
+    success: true,
+    data: null,
+    message: "Email verified successfully. Your account is now active.",
+  });
+}
+
+export async function resendVerification(req, res) {
+  await authService.resendVerification(req.body.email);
+
+  return res.status(200).json({
+    success: true,
+    data: null,
+    message:
+      "If this email is registered and unverified, a new verification link has been sent.",
+  });
+}

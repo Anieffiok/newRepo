@@ -84,3 +84,17 @@ export const resetPasswordValidator = [
     .matches(/[\W_]/)
     .withMessage("Password must contain at least one special character"),
 ];
+
+export const verifyEmailValidator = [
+  body("token").trim().notEmpty().withMessage("Verification token is required"),
+];
+
+export const resendVerificationValidator = [
+  body("email")
+    .trim()
+    .notEmpty()
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Please provide a valid email address")
+    .normalizeEmail(),
+];
