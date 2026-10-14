@@ -12,6 +12,7 @@ import Certification from "./certification.model.js";
 import CareerGoal from "./careerGoal.model.js";
 import Interest from "./interest.model.js";
 import UserInterest from "./userInterest.model.js";
+import NotificationPreference from "./notificationPreference.model.js";
 
 // ==========================================
 // 1. User & Profile (1:1)
@@ -133,6 +134,17 @@ Interest.hasMany(UserInterest, {
   as: "userInterests",
 });
 
+// 9. User & Notifications
+User.hasMany(NotificationPreference, {
+  foreignKey: "userId",
+  as: "notificationPreferences",
+  onDelete: "CASCADE",
+});
+NotificationPreference.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
 // ==========================================
 // Exports
 // ==========================================
@@ -151,6 +163,7 @@ export {
   CareerGoal,
   Interest,
   UserInterest,
+  NotificationPreference,
 };
 
 export default {
@@ -168,4 +181,5 @@ export default {
   CareerGoal,
   Interest,
   UserInterest,
+  NotificationPreference,
 };
