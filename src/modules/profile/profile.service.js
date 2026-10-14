@@ -11,82 +11,55 @@ import {
 import ApiError from "../../utils/ApiError.js";
 
 /**
- * Calculates profile completion percentage and returns missing checklist items
+ * Calculates profile completion status:
+ * Required for COMPLETE:
+ *  1. Target Role (Career Goal with targetRole)
+ *  2. Education (at least 1 entry with institution, qualification, fieldOfStudy)
+ *  3. Career Level (profile.careerLevel is set)
  */
 function calculateProfileCompletion(data) {
-  let score = 0;
+  const { profile, education, careerGoals, skills, experiences, certifications, interests } = data;
   const missingSteps = [];
+  let score = 0;
 
-  const {
-    profile,
-    education,
-    skills,
-    experiences,
-    certifications,
-    careerGoals,
-    interests,
-  } = data;
-
-  // 1. Basic profile info (25%)
-  const hasBasicInfo = Boolean(
-    profile.headline?.trim() &&
-    profile.location?.trim() &&
-    profile.country?.trim() &&
-    profile.biography?.trim(),
+  // 1. Target Role (Screen B1) - 35 points
+  const hasTargetRole = Boolean(
+    (careerGoals && careerGoals.some((g) => g.targetRole?.trim())) ||
+    profile.headline?.trim()
   );
-  if (hasBasicInfo) {
-    score += 25;
+  if (hasTargetRole) {
+    score += 35;
   } else {
-    missingSteps.push(
-      "Complete basic profile information (headline, location, country, biography)",
-    );
+    missingSteps.push('Set your target role (Career Goals)');
   }
 
-  // 2. Education (15%)
-  if (education && education.length > 0) {
-    score += 15;
+  // 2. Education (Screen B2) - 35 points
+  const hasValidEducation = Boolean(
+    education &&
+    education.some(
+      (e) => e.institution?.trim() && e.qualification?.trim() && e.fieldOfStudy?.trsim()
+    )
+  );
+  if (hasValidEducation) {
+    score += 35;
   } else {
-    missingSteps.push("Add at least one education record");
+    missingSteps.push('Add your educational background (Institution, Degree, Field of Study)');
   }
 
-  // 3. Experience (15%)
-  if (experiences && experiences.length > 0) {
-    score += 15;
+  // 3. Career Level (Screen B3) - 30 points
+  const hasCareerLevel = Boolean(profile.careerLevel);
+  if (hasCareerLevel) {
+    score += 30;
   } else {
-    missingSteps.push("Add at least one work or project experience");
+    missingSteps.push('Select your career level');
   }
 
-  // 4. Skills (15%)
-  if (skills && skills.length >= 3) {
-    score += 15;
-  } else {
-    missingSteps.push("Add at least 3 skills to your profile");
-  }
-
-  // 5. Certifications (10%)
-  if (certifications && certifications.length > 0) {
-    score += 10;
-  } else {
-    missingSteps.push("Add certifications or licenses");
-  }
-
-  // 6. Career Goals (10%)
-  if (careerGoals && careerGoals.length > 0) {
-    score += 10;
-  } else {
-    missingSteps.push("Set your target career goals");
-  }
-
-  // 7. Interests (10%)
-  if (interests && interests.length >= 2) {
-    score += 10;
-  } else {
-    missingSteps.push("Select at least 2 career interests");
-  }
+  // Core onboarding is complete if all 3 required pillars are present
+  const isCoreComplete = hasTargetRole && hasValidEducation && hasCareerLevel;
 
   return {
-    percentage: score,
-    status: score >= 80 ? "COMPLETE" : "INCOMPLETE",
+    percentage: score, // 0 - 100 based on the 3 core onboarding steps
+    status: isCoreComplete ? 'COMPLETE' : 'INCOMPLETE',
     missingSteps,
   };
 }
