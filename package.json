@@ -25,6 +25,8 @@
   },
   "homepage": "https://github.com/okeleyeayomide08/ROVIA#readme",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1152.0",
+    "@aws-sdk/s3-request-presigner": "^3.1152.0",
     "argon2": "^0.45.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
@@ -34,6 +36,7 @@
     "express-validator": "^7.3.2",
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
+    "multer": "^2.4.0",
     "nodemailer": "^10.0.16",
     "pg": "^8.23.1",
     "pg-hstore": "^2.3.4",

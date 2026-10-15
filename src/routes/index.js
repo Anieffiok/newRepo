@@ -9,6 +9,7 @@ import goalRoutes from "../modules/goals/goal.routes.js";
 import interestRoutes from "../modules/interests/interest.routes.js";
 import skillRoutes from "../modules/skills/skills.routes.js";
 import notificationRoutes from "../modules/notifications/notification.routes.js";
+import documentRoutes from "../modules/documents/document.routes.js";
 
 const router = Router();
 
@@ -22,6 +23,7 @@ router.use("/goals", goalRoutes);
 router.use("/interests", interestRoutes);
 router.use("/skills", skillRoutes);
 router.use("/notifications", notificationRoutes);
+router.use("/documents", documentRoutes);
 
 router.get("/", (req, res) => {
   res.json({ success: true, message: "Rovia API v1" });
