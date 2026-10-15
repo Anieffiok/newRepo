@@ -10,6 +10,17 @@ import {
 } from "../../database/models/index.js";
 import ApiError from "../../utils/ApiError.js";
 
+const PROFILE_COMPLETION_WEIGHTS = {
+  basicInfo: 25,
+  education: 15,
+  experience: 15,
+  skills: 15,
+  certifications: 10,
+  careerGoals: 10,
+  interests: 10,
+};
+const PROFILE_COMPLETION_THRESHOLD = 80;
+
 /**
  * Calculates profile completion percentage and returns missing checklist items
  */
@@ -35,7 +46,7 @@ function calculateProfileCompletion(data) {
     profile.biography?.trim(),
   );
   if (hasBasicInfo) {
-    score += 25;
+    score += PROFILE_COMPLETION_WEIGHTS.basicInfo;
   } else {
     missingSteps.push(
       "Complete basic profile information (headline, location, country, biography)",
@@ -44,49 +55,50 @@ function calculateProfileCompletion(data) {
 
   // 2. Education (15%)
   if (education && education.length > 0) {
-    score += 15;
+    score += PROFILE_COMPLETION_WEIGHTS.education;
   } else {
     missingSteps.push("Add at least one education record");
   }
 
   // 3. Experience (15%)
   if (experiences && experiences.length > 0) {
-    score += 15;
+    score += PROFILE_COMPLETION_WEIGHTS.experience;
   } else {
     missingSteps.push("Add at least one work or project experience");
   }
 
   // 4. Skills (15%)
   if (skills && skills.length >= 3) {
-    score += 15;
+    score += PROFILE_COMPLETION_WEIGHTS.skills;
   } else {
     missingSteps.push("Add at least 3 skills to your profile");
   }
 
   // 5. Certifications (10%)
   if (certifications && certifications.length > 0) {
-    score += 10;
+    score += PROFILE_COMPLETION_WEIGHTS.certifications;
   } else {
     missingSteps.push("Add certifications or licenses");
   }
 
   // 6. Career Goals (10%)
   if (careerGoals && careerGoals.length > 0) {
-    score += 10;
+    score += PROFILE_COMPLETION_WEIGHTS.careerGoals;
   } else {
     missingSteps.push("Set your target career goals");
   }
 
   // 7. Interests (10%)
   if (interests && interests.length >= 2) {
-    score += 10;
+    score += PROFILE_COMPLETION_WEIGHTS.interests;
   } else {
     missingSteps.push("Select at least 2 career interests");
   }
 
   return {
     percentage: score,
-    status: score >= 80 ? "COMPLETE" : "INCOMPLETE",
+    status:
+      score >= PROFILE_COMPLETION_THRESHOLD ? "COMPLETE" : "INCOMPLETE",
     missingSteps,
   };
 }

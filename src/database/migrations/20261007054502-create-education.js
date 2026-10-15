@@ -1,9 +1,6 @@
-"use strict";
-
-/** @type {import('sequelize-cli').Migration} */
-module.exports = {
+export default {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("certifications", {
+    await queryInterface.createTable("education", {
       id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
@@ -17,28 +14,28 @@ module.exports = {
         onDelete: "CASCADE",
         onUpdate: "CASCADE",
       },
-      name: {
+      institution: {
         type: Sequelize.STRING(255),
         allowNull: false,
       },
-      issuer: {
+      qualification: {
         type: Sequelize.STRING(255),
         allowNull: false,
       },
-      issue_date: {
-        type: Sequelize.DATEONLY,
-        allowNull: true,
-      },
-      expiry_date: {
-        type: Sequelize.DATEONLY,
-        allowNull: true,
-      },
-      credential_id: {
+      field_of_study: {
         type: Sequelize.STRING(255),
+        allowNull: false,
+      },
+      start_date: {
+        type: Sequelize.DATEONLY,
         allowNull: true,
       },
-      credential_url: {
-        type: Sequelize.STRING(500),
+      end_date: {
+        type: Sequelize.DATEONLY,
+        allowNull: true,
+      },
+      country: {
+        type: Sequelize.STRING(100),
         allowNull: true,
       },
       verification_status: {
@@ -56,15 +53,15 @@ module.exports = {
       },
     });
 
-    await queryInterface.addIndex("certifications", ["user_id"], {
-      name: "certifications_user_id_idx",
+    await queryInterface.addIndex("education", ["user_id"], {
+      name: "education_user_id_idx",
     });
   },
 
   async down(queryInterface) {
-    await queryInterface.dropTable("certifications");
+    await queryInterface.dropTable("education");
     await queryInterface.sequelize.query(
-      'DROP TYPE IF EXISTS "enum_certifications_verification_status";',
+      'DROP TYPE IF EXISTS "enum_education_verification_status";',
     );
   },
 };

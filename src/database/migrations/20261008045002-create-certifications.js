@@ -1,9 +1,7 @@
-"use strict";
-
 /** @type {import('sequelize-cli').Migration} */
-module.exports = {
+export default {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("career_goals", {
+    await queryInterface.createTable("certifications", {
       id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
@@ -17,30 +15,33 @@ module.exports = {
         onDelete: "CASCADE",
         onUpdate: "CASCADE",
       },
-      goal_type: {
-        type: Sequelize.STRING(100),
-        allowNull: true,
-      },
-      target_role: {
+      name: {
         type: Sequelize.STRING(255),
         allowNull: false,
       },
-      target_industry: {
+      issuer: {
         type: Sequelize.STRING(255),
-        allowNull: true,
-      },
-      target_location: {
-        type: Sequelize.STRING(255),
-        allowNull: true,
-      },
-      priority: {
-        type: Sequelize.ENUM("LOW", "MEDIUM", "HIGH"),
-        defaultValue: "MEDIUM",
         allowNull: false,
       },
-      status: {
-        type: Sequelize.ENUM("ACTIVE", "ACHIEVED", "ABANDONED"),
-        defaultValue: "ACTIVE",
+      issue_date: {
+        type: Sequelize.DATEONLY,
+        allowNull: true,
+      },
+      expiry_date: {
+        type: Sequelize.DATEONLY,
+        allowNull: true,
+      },
+      credential_id: {
+        type: Sequelize.STRING(255),
+        allowNull: true,
+      },
+      credential_url: {
+        type: Sequelize.STRING(500),
+        allowNull: true,
+      },
+      verification_status: {
+        type: Sequelize.ENUM("PENDING", "VERIFIED", "REJECTED"),
+        defaultValue: "PENDING",
         allowNull: false,
       },
       created_at: {
@@ -53,18 +54,15 @@ module.exports = {
       },
     });
 
-    await queryInterface.addIndex("career_goals", ["user_id"], {
-      name: "career_goals_user_id_idx",
+    await queryInterface.addIndex("certifications", ["user_id"], {
+      name: "certifications_user_id_idx",
     });
   },
 
   async down(queryInterface) {
-    await queryInterface.dropTable("career_goals");
+    await queryInterface.dropTable("certifications");
     await queryInterface.sequelize.query(
-      'DROP TYPE IF EXISTS "enum_career_goals_priority";',
-    );
-    await queryInterface.sequelize.query(
-      'DROP TYPE IF EXISTS "enum_career_goals_status";',
+      'DROP TYPE IF EXISTS "enum_certifications_verification_status";',
     );
   },
 };

@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "db:migrate": "sequelize-cli db:migrate --config src/config/database.js --migrations-path src/database/migrations",
+    "db:migrate:status": "sequelize-cli db:migrate:status --config src/config/database.js --migrations-path src/database/migrations",
+    "db:migrate:undo": "sequelize-cli db:migrate:undo --config src/config/database.js --migrations-path src/database/migrations"
   },
   "repository": {
     "type": "git",
@@ -20,6 +23,9 @@
     "url": "https://github.com/okeleyeayomide08/ROVIA/issues"
   },
   "homepage": "https://github.com/okeleyeayomide08/ROVIA#readme",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "dependencies": {
     "argon2": "^0.45.1",
     "cookie-parser": "^1.4.7",

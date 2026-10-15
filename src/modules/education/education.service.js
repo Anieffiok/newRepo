@@ -1,48 +1,55 @@
-import { getCollection } from '../../config/database.js';
-import ApiError from '../../utils/ApiError.js';
-import { pickFields, toApiDocument, toObjectId } from '../../utils/mongoDocument.js';
+import { Education } from "../../database/models/index.js";
+import ApiError from "../../utils/ApiError.js";
+
+const allowedFields = [
+  "institution",
+  "qualification",
+  "fieldOfStudy",
+  "startDate",
+  "endDate",
+  "country",
+];
+
+function pickEducationFields(data) {
+  return Object.fromEntries(
+    allowedFields
+      .filter((field) => data[field] !== undefined)
+      .map((field) => [field, data[field]]),
+  );
+}
 
 class EducationService {
   async create(userId, data) {
-    const document = {
-      ...pickFields(data, ['school', 'degree', 'fieldOfStudy', 'startDate', 'endDate']),
-      userId
-    };
-    const result = await getCollection('education').insertOne(document);
-    return toApiDocument({ ...document, _id: result.insertedId });
+    return Education.create({
+      ...pickEducationFields(data),
+      userId,
+    });
   }
 
   async getAll(userId) {
-    const documents = await getCollection('education').find({ userId }).toArray();
-    return documents.map(toApiDocument);
+    return Education.findAll({
+      where: { userId },
+      order: [["startDate", "DESC NULLS LAST"]],
+    });
   }
 
   async getById(userId, id) {
-    const education = await getCollection('education').findOne({ _id: toObjectId(id), userId });
+    const education = await Education.findOne({ where: { id, userId } });
     if (!education) {
-      throw new ApiError(404, 'NOT_FOUND', 'Education record not found');
+      throw new ApiError(404, "NOT_FOUND", "Education record not found");
     }
-    return toApiDocument(education);
+    return education;
   }
 
   async update(userId, id, data) {
-    const education = await getCollection('education').findOneAndUpdate(
-      { _id: toObjectId(id), userId },
-      { $set: pickFields(data, ['school', 'degree', 'fieldOfStudy', 'startDate', 'endDate']) },
-      { returnDocument: 'after', includeResultMetadata: false }
-    );
-    if (!education) {
-      throw new ApiError(404, 'NOT_FOUND', 'Education record not found');
-    }
-    return toApiDocument(education);
+    const education = await this.getById(userId, id);
+    return education.update(pickEducationFields(data));
   }
 
   async delete(userId, id) {
-    const result = await getCollection('education').deleteOne({ _id: toObjectId(id), userId });
-    if (result.deletedCount === 0) {
-      throw new ApiError(404, 'NOT_FOUND', 'Education record not found');
-    }
-    return { message: 'Education record deleted successfully' };
+    const education = await this.getById(userId, id);
+    await education.destroy();
+    return { message: "Education record deleted successfully" };
   }
 }
 
