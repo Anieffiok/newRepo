@@ -14,6 +14,9 @@ import Interest from "./interest.model.js";
 import UserInterest from "./userInterest.model.js";
 import NotificationPreference from "./notificationPreference.model.js";
 import Document from "./document.model.js";
+import Opportunity from "./opportunity.model.js";
+import OpportunityRequirement from "./opportunityRequirement.model.js";
+import SavedOpportunity from "./savedOpportunity.model.js";
 
 // ==========================================
 // 1. User & Profile (1:1)
@@ -157,6 +160,39 @@ Document.belongsTo(User, {
   as: "user",
 });
 
+// 11. Opportunity → Requirements (1:N)
+Opportunity.hasMany(OpportunityRequirement, {
+  foreignKey: "opportunityId",
+  as: "requirements",
+  onDelete: "CASCADE",
+});
+OpportunityRequirement.belongsTo(Opportunity, {
+  foreignKey: "opportunityId",
+  as: "opportunity",
+});
+
+// 12. User → Saved Opportunities (1:N)
+User.hasMany(SavedOpportunity, {
+  foreignKey: "userId",
+  as: "savedOpportunities",
+  onDelete: "CASCADE",
+});
+SavedOpportunity.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
+// 13. Opportunity → Saved Opportunities (1:N)
+Opportunity.hasMany(SavedOpportunity, {
+  foreignKey: "opportunityId",
+  as: "saves",
+  onDelete: "CASCADE",
+});
+SavedOpportunity.belongsTo(Opportunity, {
+  foreignKey: "opportunityId",
+  as: "opportunity",
+});
+
 // ==========================================
 // Exports
 // ==========================================
@@ -177,6 +213,9 @@ export {
   UserInterest,
   NotificationPreference,
   Document,
+  Opportunity,
+  OpportunityRequirement,
+  SavedOpportunity,
 };
 
 export default {
@@ -196,4 +235,7 @@ export default {
   UserInterest,
   NotificationPreference,
   Document,
+  Opportunity,
+  OpportunityRequirement,
+  SavedOpportunity,
 };
