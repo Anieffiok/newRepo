@@ -17,6 +17,8 @@ import Document from "./document.model.js";
 import Opportunity from "./opportunity.model.js";
 import OpportunityRequirement from "./opportunityRequirement.model.js";
 import SavedOpportunity from "./savedOpportunity.model.js";
+import EligibilityResult from "./eligibilityResult.model.js";
+import EligibilityItem from "./eligibilityItem.model.js";
 
 // ==========================================
 // 1. User & Profile (1:1)
@@ -193,6 +195,50 @@ SavedOpportunity.belongsTo(Opportunity, {
   as: "opportunity",
 });
 
+// User → Eligibility Results
+User.hasMany(EligibilityResult, {
+  foreignKey: "userId",
+  as: "eligibilityResults",
+  onDelete: "CASCADE",
+});
+EligibilityResult.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
+// Opportunity → Eligibility Results
+Opportunity.hasMany(EligibilityResult, {
+  foreignKey: "opportunityId",
+  as: "eligibilityResults",
+  onDelete: "CASCADE",
+});
+EligibilityResult.belongsTo(Opportunity, {
+  foreignKey: "opportunityId",
+  as: "opportunity",
+});
+
+// EligibilityResult → Items (1:N)
+EligibilityResult.hasMany(EligibilityItem, {
+  foreignKey: "eligibilityResultId",
+  as: "items",
+  onDelete: "CASCADE",
+});
+EligibilityItem.belongsTo(EligibilityResult, {
+  foreignKey: "eligibilityResultId",
+  as: "eligibilityResult",
+});
+
+// EligibilityItem → Requirement
+OpportunityRequirement.hasMany(EligibilityItem, {
+  foreignKey: "requirementId",
+  as: "eligibilityItems",
+  onDelete: "CASCADE",
+});
+EligibilityItem.belongsTo(OpportunityRequirement, {
+  foreignKey: "requirementId",
+  as: "requirement",
+});
+
 // ==========================================
 // Exports
 // ==========================================
@@ -216,6 +262,8 @@ export {
   Opportunity,
   OpportunityRequirement,
   SavedOpportunity,
+  EligibilityResult,
+  EligibilityItem,
 };
 
 export default {
@@ -238,4 +286,6 @@ export default {
   Opportunity,
   OpportunityRequirement,
   SavedOpportunity,
+  EligibilityResult,
+  EligibilityItem,
 };
