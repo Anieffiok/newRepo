@@ -238,8 +238,7 @@ function evaluateDiscipline(descLower, acceptsAnyDiscipline, profile) {
   // If we can't confidently match, flag as potential gap rather than hard rejection
   return {
     result: "POTENTIAL_GAP",
-    reason: `This opportunity mentions "${description}" but your field of study is ${profile.fieldOfStudy}. You may still be eligible — check the full requirements.`,
-    userInfoUsed: userInfo,
+    reason: `This opportunity mentions "${descLower}" but your field of study is ${profile.fieldOfStudy}. You may still be eligible — check the full requirements.`,
   };
 }
 

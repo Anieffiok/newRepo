@@ -21,6 +21,8 @@ import EligibilityResult from "./eligibilityResult.model.js";
 import EligibilityItem from "./eligibilityItem.model.js";
 import Application from "./application.model.js";
 import ApplicationStage from "./applicationStage.model.js";
+import ReadinessResult from "./readinessResult.model.js";
+import ReadinessItem from "./readinessItem.model.js";
 
 // ==========================================
 // 1. User & Profile (1:1)
@@ -274,6 +276,50 @@ ApplicationStage.belongsTo(Application, {
   as: "application",
 });
 
+// User → Readiness Results
+User.hasMany(ReadinessResult, {
+  foreignKey: "userId",
+  as: "readinessResults",
+  onDelete: "CASCADE",
+});
+ReadinessResult.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
+// Opportunity → Readiness Results
+Opportunity.hasMany(ReadinessResult, {
+  foreignKey: "opportunityId",
+  as: "readinessResults",
+  onDelete: "CASCADE",
+});
+ReadinessResult.belongsTo(Opportunity, {
+  foreignKey: "opportunityId",
+  as: "opportunity",
+});
+
+// EligibilityResult → ReadinessResult (1:1)
+EligibilityResult.hasOne(ReadinessResult, {
+  foreignKey: "eligibilityResultId",
+  as: "readinessResult",
+  onDelete: "SET NULL",
+});
+ReadinessResult.belongsTo(EligibilityResult, {
+  foreignKey: "eligibilityResultId",
+  as: "eligibilityResult",
+});
+
+// ReadinessResult → Items (1:N)
+ReadinessResult.hasMany(ReadinessItem, {
+  foreignKey: "readinessResultId",
+  as: "items",
+  onDelete: "CASCADE",
+});
+ReadinessItem.belongsTo(ReadinessResult, {
+  foreignKey: "readinessResultId",
+  as: "readinessResult",
+});
+
 // ==========================================
 // Exports
 // ==========================================
@@ -301,6 +347,8 @@ export {
   EligibilityItem,
   Application,
   ApplicationStage,
+  ReadinessResult,
+  ReadinessItem,
 };
 
 export default {
@@ -327,4 +375,6 @@ export default {
   EligibilityItem,
   Application,
   ApplicationStage,
+  ReadinessResult,
+  ReadinessItem,
 };

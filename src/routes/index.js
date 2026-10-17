@@ -13,6 +13,7 @@ import documentRoutes from "../modules/documents/document.routes.js";
 import opportunityRoutes from "../modules/opportunities/opportunity.routes.js";
 import eligibilityRoutes from "../modules/eligibility/eligibility.routes.js";
 import applicationRoutes from "../modules/applications/application.routes.js";
+import readinessRoutes from "../modules/readiness/readiness.routes.js";
 
 const router = Router();
 
@@ -30,6 +31,7 @@ router.use("/documents", documentRoutes);
 router.use("/opportunities", opportunityRoutes);
 router.use("/eligibility", eligibilityRoutes);
 router.use("/applications", applicationRoutes);
+router.use("/readiness", readinessRoutes);
 
 router.get("/", (req, res) => {
   res.json({ success: true, message: "Rovia API v1" });
