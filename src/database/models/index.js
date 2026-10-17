@@ -19,6 +19,8 @@ import OpportunityRequirement from "./opportunityRequirement.model.js";
 import SavedOpportunity from "./savedOpportunity.model.js";
 import EligibilityResult from "./eligibilityResult.model.js";
 import EligibilityItem from "./eligibilityItem.model.js";
+import Application from "./application.model.js";
+import ApplicationStage from "./applicationStage.model.js";
 
 // ==========================================
 // 1. User & Profile (1:1)
@@ -239,6 +241,39 @@ EligibilityItem.belongsTo(OpportunityRequirement, {
   as: "requirement",
 });
 
+// User → Applications
+User.hasMany(Application, {
+  foreignKey: "userId",
+  as: "applications",
+  onDelete: "CASCADE",
+});
+Application.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
+// Opportunity → Applications
+Opportunity.hasMany(Application, {
+  foreignKey: "opportunityId",
+  as: "applications",
+  onDelete: "CASCADE",
+});
+Application.belongsTo(Opportunity, {
+  foreignKey: "opportunityId",
+  as: "opportunity",
+});
+
+// Application → Stages (1:N)
+Application.hasMany(ApplicationStage, {
+  foreignKey: "applicationId",
+  as: "stages",
+  onDelete: "CASCADE",
+});
+ApplicationStage.belongsTo(Application, {
+  foreignKey: "applicationId",
+  as: "application",
+});
+
 // ==========================================
 // Exports
 // ==========================================
@@ -264,6 +299,8 @@ export {
   SavedOpportunity,
   EligibilityResult,
   EligibilityItem,
+  Application,
+  ApplicationStage,
 };
 
 export default {
@@ -288,4 +325,6 @@ export default {
   SavedOpportunity,
   EligibilityResult,
   EligibilityItem,
+  Application,
+  ApplicationStage,
 };

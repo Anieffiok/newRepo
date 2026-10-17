@@ -12,6 +12,7 @@ import notificationRoutes from "../modules/notifications/notification.routes.js"
 import documentRoutes from "../modules/documents/document.routes.js";
 import opportunityRoutes from "../modules/opportunities/opportunity.routes.js";
 import eligibilityRoutes from "../modules/eligibility/eligibility.routes.js";
+import applicationRoutes from "../modules/applications/application.routes.js";
 
 const router = Router();
 
@@ -28,6 +29,7 @@ router.use("/notifications", notificationRoutes);
 router.use("/documents", documentRoutes);
 router.use("/opportunities", opportunityRoutes);
 router.use("/eligibility", eligibilityRoutes);
+router.use("/applications", applicationRoutes);
 
 router.get("/", (req, res) => {
   res.json({ success: true, message: "Rovia API v1" });
