@@ -23,6 +23,7 @@ import Application from "./application.model.js";
 import ApplicationStage from "./applicationStage.model.js";
 import ReadinessResult from "./readinessResult.model.js";
 import ReadinessItem from "./readinessItem.model.js";
+import Action from "./action.model.js";
 
 // ==========================================
 // 1. User & Profile (1:1)
@@ -320,6 +321,17 @@ ReadinessItem.belongsTo(ReadinessResult, {
   as: "readinessResult",
 });
 
+// User -> Action
+User.hasMany(Action, {
+  foreignKey: "userId",
+  as: "actions",
+  onDelete: "CASCADE",
+});
+Action.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
 // ==========================================
 // Exports
 // ==========================================
@@ -349,6 +361,7 @@ export {
   ApplicationStage,
   ReadinessResult,
   ReadinessItem,
+  Action,
 };
 
 export default {
@@ -377,4 +390,5 @@ export default {
   ApplicationStage,
   ReadinessResult,
   ReadinessItem,
+  Action,
 };
