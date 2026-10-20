@@ -26,6 +26,8 @@ import ReadinessResult from "./readinessResult.model.js";
 import ReadinessItem from "./readinessItem.model.js";
 import Action from "./action.model.js";
 import PracticeSession from "./practiceSession.model.js";
+import LearningResource from "./learningResource.model.js";
+import UserLearning from "./userLearning.model.js";
 
 // ==========================================
 // 1. User & Profile (1:1)
@@ -366,6 +368,27 @@ PracticeSession.belongsTo(Opportunity, {
   as: "opportunity",
 });
 
+//User Learning and Resouces
+User.hasMany(UserLearning, {
+  foreignKey: "userId",
+  as: "learningProgress",
+  onDelete: "CASCADE",
+});
+UserLearning.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
+LearningResource.hasMany(UserLearning, {
+  foreignKey: "resourceId",
+  as: "userProgress",
+  onDelete: "CASCADE",
+});
+UserLearning.belongsTo(LearningResource, {
+  foreignKey: "resourceId",
+  as: "resource",
+});
+
 // ==========================================
 // Exports
 // ==========================================
@@ -398,6 +421,8 @@ export {
   Action,
   Notification,
   PracticeSession,
+  UserLearning,
+  LearningResource,
 };
 
 export default {
@@ -429,4 +454,6 @@ export default {
   Action,
   Notification,
   PracticeSession,
+  UserLearning,
+  LearningResource,
 };
