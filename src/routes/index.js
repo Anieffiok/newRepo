@@ -18,6 +18,7 @@ import homeRoutes from "../modules/home/home.routes.js";
 import practiceRoutes from "../modules/practice/practice.routes.js";
 import learningRoutes from "../modules/learning/learning.routes.js";
 import preparationRoutes from "../modules/preparation/preparation.routes.js";
+import trustRoutes from "../modules/trust/trust.routes.js";
 
 const router = Router();
 
@@ -40,6 +41,7 @@ router.use("/", homeRoutes);
 router.use("/practice", practiceRoutes);
 router.use("/learning", learningRoutes);
 router.use("/preparation", preparationRoutes);
+router.use("/trust", trustRoutes);
 
 router.get("/", (req, res) => {
   res.json({ success: true, message: "Rovia API v1" });

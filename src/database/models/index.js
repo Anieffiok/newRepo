@@ -28,6 +28,8 @@ import Action from "./action.model.js";
 import PracticeSession from "./practiceSession.model.js";
 import LearningResource from "./learningResource.model.js";
 import UserLearning from "./userLearning.model.js";
+import PrivacySetting from "./privacySetting.model.js";
+import DeletionRequest from "./deletionRequest.model.js";
 
 // ==========================================
 // 1. User & Profile (1:1)
@@ -389,6 +391,27 @@ UserLearning.belongsTo(LearningResource, {
   as: "resource",
 });
 
+// User Privacy and Deletion
+User.hasOne(PrivacySetting, {
+  foreignKey: "userId",
+  as: "privacySettings",
+  onDelete: "CASCADE",
+});
+PrivacySetting.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
+User.hasMany(DeletionRequest, {
+  foreignKey: "userId",
+  as: "deletionRequests",
+  onDelete: "CASCADE",
+});
+DeletionRequest.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
 // ==========================================
 // Exports
 // ==========================================
@@ -423,6 +446,8 @@ export {
   PracticeSession,
   UserLearning,
   LearningResource,
+  PrivacySetting,
+  DeletionRequest,
 };
 
 export default {
@@ -456,4 +481,6 @@ export default {
   PracticeSession,
   UserLearning,
   LearningResource,
+  PrivacySetting,
+  DeletionRequest,
 };
