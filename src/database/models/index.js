@@ -25,6 +25,7 @@ import ApplicationStage from "./applicationStage.model.js";
 import ReadinessResult from "./readinessResult.model.js";
 import ReadinessItem from "./readinessItem.model.js";
 import Action from "./action.model.js";
+import PracticeSession from "./practiceSession.model.js";
 
 // ==========================================
 // 1. User & Profile (1:1)
@@ -344,6 +345,27 @@ Action.belongsTo(User, {
   as: "user",
 });
 
+// Practice Questions
+User.hasMany(PracticeSession, {
+  foreignKey: "userId",
+  as: "practiceSessions",
+  onDelete: "CASCADE",
+});
+PracticeSession.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
+Opportunity.hasMany(PracticeSession, {
+  foreignKey: "opportunityId",
+  as: "practiceSessions",
+  onDelete: "CASCADE",
+});
+PracticeSession.belongsTo(Opportunity, {
+  foreignKey: "opportunityId",
+  as: "opportunity",
+});
+
 // ==========================================
 // Exports
 // ==========================================
@@ -375,6 +397,7 @@ export {
   ReadinessItem,
   Action,
   Notification,
+  PracticeSession,
 };
 
 export default {
@@ -405,4 +428,5 @@ export default {
   ReadinessItem,
   Action,
   Notification,
+  PracticeSession,
 };

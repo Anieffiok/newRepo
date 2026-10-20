@@ -109,13 +109,23 @@ You generate realistic practice questions. Rules:
 - Questions should be specific to the opportunity type and role.
 - Mix behavioral and technical questions.
 - Include one question about Nigerian context if relevant.
-- Provide 5 questions maximum.`;
+- Provide exactly 5 questions, no more, no less.
+- Do NOT add any introductory text, closing remarks, or conversational filler.
+- Do NOT ask if the user wants more help.
+- Output ONLY the questions, each on a new line, numbered 1 through 5.
+- Each question must end with a question mark.
+- Example format:
+1. Tell me about a time you used Python to solve a data problem.
+2. How would you handle missing data in a real-world dataset?
+3. Describe your experience working in a team under tight deadlines.
+4. What do you know about the Nigerian fintech industry?
+5. Where do you see your career in the next three years?`;
 
     const prompt = `Opportunity: ${opportunity.title} at ${opportunity.organization}
 Type: ${opportunity.type}
 User background: degree=${userProfile.degree}, skills=${userProfile.skills?.join(", ")}
 
-Generate 5 practice interview questions for this opportunity.`;
+Generate exactly 5 practice interview questions for this opportunity. Output ONLY the numbered questions, nothing else.`;
 
     return this.#call(system, prompt);
   }
