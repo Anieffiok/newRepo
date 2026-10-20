@@ -1,11 +1,19 @@
 import * as authService from "./auth.service.js";
 
+const isProduction = process.env.NODE_ENV === "production";
+
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax",
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+  secure: env.cookie.secure,
+  sameSite: env.cookie.sameSite,
+  path: "/",
+  domain: env.cookie.domain,
+  maxAge: 7 * 24 * 60 * 60 * 1000,
 };
+
+function getRefreshTokenFromRequest(req) {
+  return req.cookies?.refreshToken || req.body?.refreshToken || null;
+}
 
 export async function register(req, res) {
   const result = await authService.register(req.body);
@@ -40,7 +48,17 @@ export async function login(req, res) {
 }
 
 export async function refresh(req, res) {
-  const rawToken = req.cookies?.refreshToken || req.body.refreshToken;
+  const rawToken = getRefreshTokenFromRequest(req);
+
+  if (!rawToken) {
+    return res.status(401).json({
+      success: false,
+      error: {
+        code: "UNAUTHORIZED",
+        message: "Refresh token is required",
+      },
+    });
+  }
 
   const result = await authService.refresh(rawToken);
 
@@ -55,6 +73,7 @@ export async function refresh(req, res) {
 
 export async function logout(req, res) {
   const userId = req.user?.id;
+  const rawToken = getRefreshTokenFromRequest(req);
 
   if (!userId) {
     return res.status(401).json({
@@ -66,14 +85,15 @@ export async function logout(req, res) {
     });
   }
 
-  const rawToken = req.cookies?.refreshToken || req.body.refreshToken;
-
   await authService.logout({
     userId,
     rawRefreshToken: rawToken,
   });
 
-  res.clearCookie("refreshToken", COOKIE_OPTIONS);
+  res.clearCookie("refreshToken", {
+    ...COOKIE_OPTIONS,
+    path: "/",
+  });
 
   return res.status(200).json({
     success: true,
@@ -85,7 +105,6 @@ export async function logout(req, res) {
 export async function forgotPassword(req, res) {
   await authService.forgotPassword(req.body.email);
 
-  // Always return the exact same success message regardless of whether email exists
   return res.status(200).json({
     success: true,
     data: null,

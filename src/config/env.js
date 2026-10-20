@@ -46,4 +46,13 @@ export default {
   },
   frontendUrl: process.env.FRONTEND_URL || "http://localhost:3000",
   logLevel: process.env.LOG_LEVEL || "info",
+  cookie: {
+    secure:
+      process.env.COOKIE_SECURE === "true" ||
+      process.env.NODE_ENV === "production",
+    sameSite:
+      process.env.COOKIE_SAME_SITE ||
+      (process.env.NODE_ENV === "production" ? "none" : "lax"),
+    domain: process.env.COOKIE_DOMAIN || undefined,
+  },
 };
