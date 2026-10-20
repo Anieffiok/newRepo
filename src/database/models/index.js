@@ -30,6 +30,7 @@ import LearningResource from "./learningResource.model.js";
 import UserLearning from "./userLearning.model.js";
 import PrivacySetting from "./privacySetting.model.js";
 import DeletionRequest from "./deletionRequest.model.js";
+import AuditLog from "./auditLog.model.js";
 
 // ==========================================
 // 1. User & Profile (1:1)
@@ -412,6 +413,17 @@ DeletionRequest.belongsTo(User, {
   as: "user",
 });
 
+// Audit Logs
+User.hasMany(AuditLog, {
+  foreignKey: "adminId",
+  as: "auditLogs",
+  onDelete: "CASCADE",
+});
+AuditLog.belongsTo(User, {
+  foreignKey: "adminId",
+  as: "admin",
+});
+
 // ==========================================
 // Exports
 // ==========================================
@@ -448,6 +460,7 @@ export {
   LearningResource,
   PrivacySetting,
   DeletionRequest,
+  AuditLog,
 };
 
 export default {
@@ -483,4 +496,5 @@ export default {
   LearningResource,
   PrivacySetting,
   DeletionRequest,
+  AuditLog,
 };
