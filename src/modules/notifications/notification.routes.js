@@ -1,6 +1,10 @@
 import { Router } from "express";
 import * as notificationController from "./notification.controller.js";
-import { updateSettingsValidator } from "./notification.validator.js";
+import {
+  updateSettingsValidator,
+  notificationIdParamValidator,
+  listNotificationsValidator,
+} from "./notification.validator.js";
 import authenticate from "../../middleware/authenticate.js";
 import validate from "../../middleware/validate.js";
 import asyncHandler from "../../utils/asyncHandler.js";
@@ -67,5 +71,75 @@ router.put(
   validate,
   asyncHandler(notificationController.updateSettings),
 );
+
+/**
+ * @swagger
+ * /notifications:
+ *   get:
+ *     summary: List notifications with unread count (Screen C2)
+ *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 20 }
+ *       - in: query
+ *         name: unreadOnly
+ *         schema: { type: boolean }
+ *       - in: query
+ *         name: type
+ *         schema: { type: string, enum: [DEADLINES, OPPORTUNITIES, APPLICATION_UPDATES, SECURITY_ALERTS] }
+ *     responses:
+ *       200:
+ *         description: Paginated notifications with unread count
+ */
+router.get(
+  "/",
+  listNotificationsValidator,
+  validate,
+  asyncHandler(notificationController.listNotifications),
+);
+
+/**
+ * @swagger
+ * /notifications/{id}/read:
+ *   patch:
+ *     summary: Mark a notification as read (Screen C2)
+ *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     responses:
+ *       200:
+ *         description: Notification marked as read
+ */
+router.patch(
+  "/:id/read",
+  notificationIdParamValidator,
+  validate,
+  asyncHandler(notificationController.markAsRead),
+);
+
+/**
+ * @swagger
+ * /notifications/read-all:
+ *   patch:
+ *     summary: Mark all notifications as read (Screen C2)
+ *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: All notifications marked as read
+ */
+router.patch("/read-all", asyncHandler(notificationController.markAllAsRead));
 
 export default router;

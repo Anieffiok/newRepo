@@ -13,6 +13,7 @@ import CareerGoal from "./careerGoal.model.js";
 import Interest from "./interest.model.js";
 import UserInterest from "./userInterest.model.js";
 import NotificationPreference from "./notificationPreference.model.js";
+import Notification from "./notification.model.js";
 import Document from "./document.model.js";
 import Opportunity from "./opportunity.model.js";
 import OpportunityRequirement from "./opportunityRequirement.model.js";
@@ -362,6 +363,7 @@ export {
   ReadinessResult,
   ReadinessItem,
   Action,
+  Notification,
 };
 
 export default {
@@ -391,4 +393,5 @@ export default {
   ReadinessResult,
   ReadinessItem,
   Action,
+  Notification,
 };
