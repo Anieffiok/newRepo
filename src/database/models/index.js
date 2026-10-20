@@ -157,6 +157,17 @@ NotificationPreference.belongsTo(User, {
   as: "user",
 });
 
+// User & Notifactions Complete
+User.hasMany(Notification, {
+  foreignKey: "userId",
+  as: "notifications",
+  onDelete: "CASCADE",
+});
+Notification.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
 // 10. User & Documents
 User.hasMany(Document, {
   foreignKey: "userId",
