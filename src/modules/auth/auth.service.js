@@ -275,18 +275,20 @@ export async function refresh(rawRefreshToken) {
   return { accessToken };
 }
 
-export async function logout(rawRefreshToken) {
-  if (!rawRefreshToken) return;
+export async function logout({ userId, rawRefreshToken }) {
+  const where = {
+    userId,
+    revokedAt: null,
+  };
 
-  const tokenHash = hashToken(rawRefreshToken);
+  if (rawRefreshToken) {
+    where.tokenHash = hashToken(rawRefreshToken);
+  }
 
   await RefreshToken.update(
     { revokedAt: new Date() },
     {
-      where: {
-        tokenHash,
-        revokedAt: null,
-      },
+      where,
     },
   );
 }

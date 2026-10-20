@@ -10,6 +10,7 @@ import {
   verifyEmailValidator,
   resendVerificationValidator,
 } from "./auth.validator.js";
+import authenticate from "../../middleware/authenticate.js";
 import validate from "../../middleware/validate.js";
 import asyncHandler from "../../utils/asyncHandler.js";
 
@@ -165,7 +166,7 @@ router.post(
  *       200:
  *         description: Logged out successfully
  */
-router.post("/logout", asyncHandler(authController.logout));
+router.post("/logout", authenticate, asyncHandler(authController.logout));
 
 /**
  * @swagger

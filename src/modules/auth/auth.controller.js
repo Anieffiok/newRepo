@@ -54,9 +54,24 @@ export async function refresh(req, res) {
 }
 
 export async function logout(req, res) {
+  const userId = req.user?.id;
+
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      error: {
+        code: "UNAUTHORIZED",
+        message: "Authentication required",
+      },
+    });
+  }
+
   const rawToken = req.cookies?.refreshToken || req.body.refreshToken;
 
-  await authService.logout(rawToken);
+  await authService.logout({
+    userId,
+    rawRefreshToken: rawToken,
+  });
 
   res.clearCookie("refreshToken", COOKIE_OPTIONS);
 

@@ -183,11 +183,34 @@ export async function getHomeDashboard(userId) {
   const nextActions = await Action.findAll({
     where: { userId, status: "OPEN" },
     order: [
-      ["priority", "ASC"], // HIGH first (alphabetically H < L < M)
-      ["dueDate", "ASC"], // Then soonest deadline
+      ["dueDate", "ASC"],
+      ["createdAt", "DESC"],
     ],
-    limit: 3,
+    limit: 20,
   });
+
+  const priorityOrder = {
+    HIGH: 1,
+    MEDIUM: 2,
+    LOW: 3,
+  };
+
+  nextActions.sort((a, b) => {
+    const aPriority = priorityOrder[a.priority] ?? 99;
+    const bPriority = priorityOrder[b.priority] ?? 99;
+
+    if (aPriority !== bPriority) {
+      return aPriority - bPriority;
+    }
+
+    if (a.dueDate && b.dueDate) {
+      return new Date(a.dueDate) - new Date(b.dueDate);
+    }
+
+    return new Date(a.createdAt) - new Date(b.createdAt);
+  });
+
+  const topThreeActions = nextActions.slice(0, 3);
 
   // 2. Upcoming deadlines (opportunities closing in next 30 days)
   const now = new Date();
@@ -252,7 +275,7 @@ export async function getHomeDashboard(userId) {
   const profileComplete = profile?.completionStatus === "COMPLETE";
 
   return {
-    nextActions,
+    nextActions: topThreeActions,
     upcomingDeadlines: deadlinesWithDays,
     recommendedOpportunities,
     profileComplete,

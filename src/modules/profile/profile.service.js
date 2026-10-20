@@ -18,32 +18,45 @@ import ApiError from "../../utils/ApiError.js";
  *  3. Career Level (profile.careerLevel is set)
  */
 function calculateProfileCompletion(data) {
-  const { profile, education, careerGoals, skills, experiences, certifications, interests } = data;
+  const {
+    profile,
+    education,
+    careerGoals,
+    skills,
+    experiences,
+    certifications,
+    interests,
+  } = data;
   const missingSteps = [];
   let score = 0;
 
   // 1. Target Role (Screen B1) - 35 points
   const hasTargetRole = Boolean(
-    (careerGoals && careerGoals.some((g) => g.targetRole?.trim())) ||
-    profile.headline?.trim()
+    careerGoals && careerGoals.some((g) => g.targetRole?.trim()),
   );
   if (hasTargetRole) {
     score += 35;
   } else {
-    missingSteps.push('Set your target role (Career Goals)');
+    missingSteps.push("Set your target role (Career Goals)");
   }
 
   // 2. Education (Screen B2) - 35 points
   const hasValidEducation = Boolean(
     education &&
     education.some(
-      (e) => e.institution?.trim() && e.qualification?.trim() && e.fieldOfStudy?.trsim()
-    )
+      (e) =>
+        e.institution?.trim() &&
+        e.qualification?.trim() &&
+        e.fieldOfStudy?.trim(),
+    ),
   );
+
   if (hasValidEducation) {
     score += 35;
   } else {
-    missingSteps.push('Add your educational background (Institution, Degree, Field of Study)');
+    missingSteps.push(
+      "Add your educational background (Institution, Degree, Field of Study)",
+    );
   }
 
   // 3. Career Level (Screen B3) - 30 points
@@ -51,7 +64,7 @@ function calculateProfileCompletion(data) {
   if (hasCareerLevel) {
     score += 30;
   } else {
-    missingSteps.push('Select your career level');
+    missingSteps.push("Select your career level");
   }
 
   // Core onboarding is complete if all 3 required pillars are present
@@ -59,7 +72,7 @@ function calculateProfileCompletion(data) {
 
   return {
     percentage: score, // 0 - 100 based on the 3 core onboarding steps
-    status: isCoreComplete ? 'COMPLETE' : 'INCOMPLETE',
+    status: isCoreComplete ? "COMPLETE" : "INCOMPLETE",
     missingSteps,
   };
 }

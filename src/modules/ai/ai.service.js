@@ -87,16 +87,39 @@ List 3-5 specific actions this user should take to close these gaps. Format as a
   }
 
   async explainOpportunityMatch(opportunity, userProfile) {
-    const system = `You are Rovia, a career guidance assistant for Nigerian graduates.
+    const system = `You are Rovia, a career guidance assistant for global graduates.
 You explain why an opportunity is relevant to a user. Rules:
 - Be specific to the user's profile.
 - Mention concrete matches (degree, skills, location).
 - Be honest about gaps without being discouraging.
 - No percentages. No fake precision.`;
 
-    const prompt = `Opportunity: ${opportunity.title} at ${opportunity.organization}
-Type: ${opportunity.type}, Deadline: ${opportunity.applicationDeadline}
-User: degree=${userProfile.degree}, skills=${userProfile.skills?.join(", ")}, careerLevel=${userProfile.careerLevel}, country=${userProfile.country}
+    const normalizedOpportunity = {
+      title: opportunity?.title || "Opportunity",
+      organisation:
+        opportunity?.organisation ||
+        opportunity?.organization ||
+        "Unknown organisation",
+      type: opportunity?.type || "Unknown type",
+      deadline:
+        opportunity?.deadline ||
+        opportunity?.applicationDeadline ||
+        "Not stated",
+    };
+
+    const normalizedUserProfile = {
+      degree:
+        userProfile?.degree ||
+        userProfile?.highestQualification ||
+        "Not provided",
+      skills: userProfile?.skills || [],
+      careerLevel: userProfile?.careerLevel || "Not specified",
+      country: userProfile?.country || "Not provided",
+    };
+
+    const prompt = `Opportunity: ${normalizedOpportunity.title} at ${normalizedOpportunity.organisation}
+Type: ${normalizedOpportunity.type}, Deadline: ${normalizedOpportunity.deadline}
+User: degree=${normalizedUserProfile.degree}, skills=${normalizedUserProfile.skills.join(", ") || "not provided"}, careerLevel=${normalizedUserProfile.careerLevel}, country=${normalizedUserProfile.country}
 
 In 2-3 sentences, explain why this opportunity is relevant to this user.`;
 
