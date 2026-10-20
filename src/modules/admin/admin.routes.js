@@ -7,10 +7,15 @@ import {
   userIdParamValidator,
   opportunityIdParamValidator,
   requestIdParamValidator,
+  reportIdParamValidator,
+  settingKeyParamValidator,
   verifyOpportunityValidator,
   setActiveStatusValidator,
   processDeletionValidator,
+  resolveReportValidator,
+  updateSettingValidator,
   listUsersValidator,
+  listReportsValidator,
   listAuditLogsValidator,
 } from "./admin.validator.js";
 
@@ -45,23 +50,16 @@ router.get("/dashboard", requireRole("ADMIN"), ctrl.getDashboard);
  *     parameters:
  *       - in: query
  *         name: page
- *         schema:
- *           type: integer
- *           default: 1
+ *         schema: { type: integer, default: 1 }
  *       - in: query
  *         name: limit
- *         schema:
- *           type: integer
- *           default: 20
+ *         schema: { type: integer, default: 20 }
  *       - in: query
  *         name: search
- *         schema:
- *           type: string
+ *         schema: { type: string }
  *     responses:
  *       200:
  *         description: Users retrieved
- *       403:
- *         description: Insufficient permissions
  */
 router.get(
   "/users",
@@ -83,9 +81,7 @@ router.get(
  *       - in: path
  *         name: userId
  *         required: true
- *         schema:
- *           type: string
- *           format: uuid
+ *         schema: { type: string, format: uuid }
  *     responses:
  *       200:
  *         description: User detail retrieved
@@ -112,9 +108,7 @@ router.get(
  *       - in: path
  *         name: userId
  *         required: true
- *         schema:
- *           type: string
- *           format: uuid
+ *         schema: { type: string, format: uuid }
  *     requestBody:
  *       required: true
  *       content:
@@ -127,8 +121,6 @@ router.get(
  *     responses:
  *       200:
  *         description: User status updated
- *       404:
- *         description: User not found
  */
 router.patch(
   "/users/:userId/status",
@@ -169,9 +161,7 @@ router.get(
  *       - in: path
  *         name: opportunityId
  *         required: true
- *         schema:
- *           type: string
- *           format: uuid
+ *         schema: { type: string, format: uuid }
  *     requestBody:
  *       required: true
  *       content:
@@ -185,8 +175,6 @@ router.get(
  *     responses:
  *       200:
  *         description: Opportunity verified or rejected
- *       404:
- *         description: Opportunity not found
  */
 router.post(
   "/opportunities/:opportunityId/verify",
@@ -195,6 +183,110 @@ router.post(
   verifyOpportunityValidator,
   validate,
   ctrl.verifyOpportunity,
+);
+
+/**
+ * @swagger
+ * /api/v1/admin/content-reports:
+ *   get:
+ *     summary: List content moderation reports
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema: { type: string, enum: [PENDING, REVIEWED, DISMISSED] }
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 20 }
+ *     responses:
+ *       200:
+ *         description: Content reports retrieved
+ */
+router.get(
+  "/content-reports",
+  requireRole("ADMIN", "MODERATOR"),
+  listReportsValidator,
+  validate,
+  ctrl.listContentReports,
+);
+
+/**
+ * @swagger
+ * /api/v1/admin/content-reports/{reportId}/resolve:
+ *   post:
+ *     summary: Resolve or dismiss a content report
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: reportId
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               decision:
+ *                 type: string
+ *                 enum: [RESOLVE, DISMISS]
+ *               notes:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Report resolved or dismissed
+ */
+router.post(
+  "/content-reports/:reportId/resolve",
+  requireRole("ADMIN", "MODERATOR"),
+  reportIdParamValidator,
+  resolveReportValidator,
+  validate,
+  ctrl.resolveContentReport,
+);
+
+/**
+ * @swagger
+ * /api/v1/admin/reports/overview:
+ *   get:
+ *     summary: Get platform overview analytics
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Overview report retrieved
+ */
+router.get(
+  "/reports/overview",
+  requireRole("ADMIN", "OPERATIONS"),
+  ctrl.getOverviewReport,
+);
+
+/**
+ * @swagger
+ * /api/v1/admin/reports/applications:
+ *   get:
+ *     summary: Get application funnel analytics
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Applications report retrieved
+ */
+router.get(
+  "/reports/applications",
+  requireRole("ADMIN", "OPERATIONS"),
+  ctrl.getApplicationsReport,
 );
 
 /**
@@ -227,9 +319,7 @@ router.get(
  *       - in: path
  *         name: requestId
  *         required: true
- *         schema:
- *           type: string
- *           format: uuid
+ *         schema: { type: string, format: uuid }
  *     requestBody:
  *       required: true
  *       content:
@@ -243,8 +333,6 @@ router.get(
  *     responses:
  *       200:
  *         description: Deletion request processed
- *       404:
- *         description: Request not found
  */
 router.post(
   "/deletions/:requestId/process",
@@ -253,6 +341,57 @@ router.post(
   processDeletionValidator,
   validate,
   ctrl.processDeletion,
+);
+
+/**
+ * @swagger
+ * /api/v1/admin/settings:
+ *   get:
+ *     summary: Get all system settings
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Settings retrieved
+ */
+router.get("/settings", requireRole("ADMIN"), ctrl.getSettings);
+
+/**
+ * @swagger
+ * /api/v1/admin/settings/{key}:
+ *   patch:
+ *     summary: Update a system setting
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: key
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               value:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Setting updated
+ *       404:
+ *         description: Setting not found
+ */
+router.patch(
+  "/settings/:key",
+  requireRole("ADMIN"),
+  settingKeyParamValidator,
+  updateSettingValidator,
+  validate,
+  ctrl.updateSetting,
 );
 
 /**
@@ -266,14 +405,10 @@ router.post(
  *     parameters:
  *       - in: query
  *         name: page
- *         schema:
- *           type: integer
- *           default: 1
+ *         schema: { type: integer, default: 1 }
  *       - in: query
  *         name: limit
- *         schema:
- *           type: integer
- *           default: 50
+ *         schema: { type: integer, default: 50 }
  *     responses:
  *       200:
  *         description: Audit logs retrieved

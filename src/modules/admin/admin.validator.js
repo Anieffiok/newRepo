@@ -12,6 +12,14 @@ export const requestIdParamValidator = [
   param("requestId").isUUID().withMessage("Valid request ID required"),
 ];
 
+export const reportIdParamValidator = [
+  param("reportId").isUUID().withMessage("Valid report ID required"),
+];
+
+export const settingKeyParamValidator = [
+  param("key").isString().trim().notEmpty().withMessage("Setting key required"),
+];
+
 export const verifyOpportunityValidator = [
   body("decision")
     .isIn(["VERIFY", "REJECT"])
@@ -28,10 +36,27 @@ export const processDeletionValidator = [
     .withMessage("Decision must be APPROVE or REJECT"),
 ];
 
+export const resolveReportValidator = [
+  body("decision")
+    .isIn(["RESOLVE", "DISMISS"])
+    .withMessage("Decision must be RESOLVE or DISMISS"),
+  body("notes").optional().isString().trim(),
+];
+
+export const updateSettingValidator = [
+  body("value").exists().withMessage("Setting value is required"),
+];
+
 export const listUsersValidator = [
   query("page").optional().isInt({ min: 1 }).toInt(),
   query("limit").optional().isInt({ min: 1, max: 100 }).toInt(),
   query("search").optional().isString().trim(),
+];
+
+export const listReportsValidator = [
+  query("page").optional().isInt({ min: 1 }).toInt(),
+  query("limit").optional().isInt({ min: 1, max: 100 }).toInt(),
+  query("status").optional().isIn(["PENDING", "REVIEWED", "DISMISSED"]),
 ];
 
 export const listAuditLogsValidator = [

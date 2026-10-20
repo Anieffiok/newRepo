@@ -5,39 +5,27 @@ import {
   DeletionRequest,
   AuditLog,
   Profile,
+  ContentReport,
+  SystemSetting,
 } from "../../database/models/index.js";
+import { fn, col, literal } from "sequelize";
 
 // ── J1: Dashboard ──────────────────────────────────────────
 export async function getDashboardStats() {
-  console.log("[ADMIN-SVC] getDashboardStats START");
-
   const totalUsers = await User.count();
-  console.log("[ADMIN-SVC] totalUsers:", totalUsers);
-
   const totalOpportunities = await Opportunity.count();
-  console.log("[ADMIN-SVC] totalOpportunities:", totalOpportunities);
-
   const pendingVerifications = await Opportunity.count({
     where: { verificationStatus: "UNVERIFIED" },
   });
-  console.log("[ADMIN-SVC] pendingVerifications:", pendingVerifications);
-
   const totalApplications = await Application.count();
-  console.log("[ADMIN-SVC] totalApplications:", totalApplications);
-
   const pendingDeletions = await DeletionRequest.count({
     where: { status: "PENDING" },
   });
-  console.log("[ADMIN-SVC] pendingDeletions:", pendingDeletions);
-
   const recentUsers = await User.findAll({
     attributes: ["id", "email", "role", "createdAt"],
-    order: [["createdAt", "DESC"]],
+    order: [["created_at", "DESC"]],
     limit: 5,
   });
-  console.log("[ADMIN-SVC] recentUsers:", recentUsers.length);
-
-  console.log("[ADMIN-SVC] getDashboardStats DONE");
 
   return {
     users: { total: totalUsers },
@@ -76,7 +64,7 @@ export async function listUsers({ page = 1, limit = 20, search } = {}) {
       "accountStatus",
       "createdAt",
     ],
-    order: [["createdAt", "DESC"]],
+    order: [["created_at", "DESC"]],
     limit,
     offset,
   });
@@ -100,7 +88,6 @@ export async function getUserDetail(userId) {
   if (!user) return null;
 
   const applicationCount = await Application.count({ where: { userId } });
-
   return { user, applicationCount };
 }
 
@@ -118,7 +105,7 @@ export async function setUserActiveStatus(userId, isActive) {
 export async function listPendingOpportunities() {
   return Opportunity.findAll({
     where: { verificationStatus: "UNVERIFIED" },
-    order: [["createdAt", "DESC"]],
+    order: [["created_at", "DESC"]],
   });
 }
 
@@ -136,8 +123,130 @@ export async function verifyOpportunity(opportunityId, decision, adminId) {
   await logAction(adminId, "VERIFY_OPPORTUNITY", "Opportunity", opportunityId, {
     decision,
   });
-
   return opp;
+}
+
+// ── J4: Content Reports ────────────────────────────────────
+export async function listContentReports({
+  page = 1,
+  limit = 20,
+  status,
+} = {}) {
+  const offset = (page - 1) * limit;
+  const where = {};
+  if (status) where.status = status;
+
+  const { count, rows } = await ContentReport.findAndCountAll({
+    where,
+    include: [
+      {
+        model: User,
+        as: "reporter",
+        attributes: ["id", "email", "firstName", "lastName"],
+      },
+      { model: User, as: "reviewer", attributes: ["id", "email", "firstName"] },
+    ],
+    order: [["created_at", "DESC"]],
+    limit,
+    offset,
+  });
+
+  return {
+    reports: rows,
+    pagination: {
+      total: count,
+      page,
+      limit,
+      totalPages: Math.ceil(count / limit),
+    },
+  };
+}
+
+export async function resolveContentReport(reportId, decision, notes, adminId) {
+  const report = await ContentReport.findByPk(reportId);
+  if (!report) return null;
+
+  report.status = decision === "DISMISS" ? "DISMISSED" : "REVIEWED";
+  report.resolutionNotes = notes || null;
+  report.reviewedBy = adminId;
+  await report.save();
+
+  await logAction(adminId, "RESOLVE_REPORT", "ContentReport", reportId, {
+    decision,
+  });
+  return report;
+}
+
+// ── J6: Reports & Analytics ────────────────────────────────
+export async function getOverviewReport() {
+  const [
+    totalUsers,
+    activeUsers,
+    totalOpportunities,
+    verifiedOpportunities,
+    totalApplications,
+    pendingDeletions,
+    pendingReports,
+  ] = await Promise.all([
+    User.count(),
+    User.count({ where: { accountStatus: "ACTIVE" } }),
+    Opportunity.count(),
+    Opportunity.count({ where: { verificationStatus: "VERIFIED" } }),
+    Application.count(),
+    DeletionRequest.count({ where: { status: "PENDING" } }),
+    ContentReport.count({ where: { status: "PENDING" } }),
+  ]);
+
+  // Application breakdown by status
+  const applicationsByStatus = await Application.findAll({
+    attributes: ["status", [fn("COUNT", col("status")), "count"]],
+    group: ["status"],
+    raw: true,
+  });
+
+  // User signups in last 30 days
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const recentSignups = await User.count({
+    where: {
+      created_at: {
+        [await import("sequelize").then((s) => s.Op.gte)]: thirtyDaysAgo,
+      },
+    },
+  });
+
+  return {
+    users: {
+      total: totalUsers,
+      active: activeUsers,
+      newLast30Days: recentSignups,
+    },
+    opportunities: {
+      total: totalOpportunities,
+      verified: verifiedOpportunities,
+    },
+    applications: { total: totalApplications, byStatus: applicationsByStatus },
+    moderation: { pendingDeletions, pendingReports },
+  };
+}
+
+export async function getApplicationsReport() {
+  const byStage = await Application.findAll({
+    attributes: ["currentStage", [fn("COUNT", col("current_stage")), "count"]],
+    group: ["current_stage"],
+    raw: true,
+  });
+
+  const byOutcome = await Application.findAll({
+    attributes: ["outcomeType", [fn("COUNT", col("outcome_type")), "count"]],
+    where: {
+      outcomeType: { [await import("sequelize").then((s) => s.Op.ne)]: null },
+    },
+    group: ["outcome_type"],
+    raw: true,
+  });
+
+  return { byStage, byOutcome };
 }
 
 // ── J7: Deletion Requests ──────────────────────────────────
@@ -155,7 +264,6 @@ export async function listDeletionRequests() {
   });
 }
 
-// ── J7: Process Deletion ───────────────────────────────────
 export async function processDeletion(requestId, decision, adminId) {
   const request = await DeletionRequest.findByPk(requestId);
   if (!request) return null;
@@ -165,7 +273,6 @@ export async function processDeletion(requestId, decision, adminId) {
     request.processedAt = new Date();
     await request.save();
 
-    // Delete the user (CASCADE handles related records)
     const user = await User.findByPk(request.userId);
     if (user) await user.destroy();
 
@@ -185,6 +292,29 @@ export async function processDeletion(requestId, decision, adminId) {
   }
 
   return request;
+}
+
+// ── J8: System Settings ────────────────────────────────────
+export async function getSettings() {
+  return SystemSetting.findAll({
+    attributes: ["key", "value", "description", "updatedAt"],
+    order: [["key", "ASC"]],
+  });
+}
+
+export async function updateSetting(key, value, adminId) {
+  const setting = await SystemSetting.findOne({ where: { key } });
+  if (!setting) return null;
+
+  setting.value = String(value);
+  setting.updatedBy = adminId;
+  await setting.save();
+
+  await logAction(adminId, "UPDATE_SETTING", "SystemSetting", setting.id, {
+    key,
+    value,
+  });
+  return setting;
 }
 
 // ── J9: Audit Logs ─────────────────────────────────────────
@@ -214,13 +344,7 @@ export async function listAuditLogs({ page = 1, limit = 50 } = {}) {
 // ── Helper: Log Action ─────────────────────────────────────
 async function logAction(adminId, action, targetType, targetId, details) {
   try {
-    await AuditLog.create({
-      adminId,
-      action,
-      targetType,
-      targetId,
-      details,
-    });
+    await AuditLog.create({ adminId, action, targetType, targetId, details });
   } catch (err) {
     console.error("[ADMIN-SVC] Failed to write audit log:", err.message);
   }

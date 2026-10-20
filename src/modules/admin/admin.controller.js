@@ -4,16 +4,13 @@ import ApiError from "../../utils/ApiError.js";
 // ── J1: Dashboard ──────────────────────────────────────────
 export async function getDashboard(req, res, next) {
   try {
-    console.log("[ADMIN-CTRL] getDashboard HIT");
     const stats = await adminService.getDashboardStats();
-    console.log("[ADMIN-CTRL] getDashboard SENDING RESPONSE");
     return res.json({
       success: true,
       data: stats,
       message: "Dashboard stats retrieved",
     });
   } catch (error) {
-    console.error("[ADMIN-CTRL] getDashboard ERROR:", error.message);
     next(error);
   }
 }
@@ -101,6 +98,72 @@ export async function verifyOpportunity(req, res, next) {
   }
 }
 
+// ── J4: Content Reports ────────────────────────────────────
+export async function listContentReports(req, res, next) {
+  try {
+    const { page, limit, status } = req.query;
+    const result = await adminService.listContentReports({
+      page,
+      limit,
+      status,
+    });
+    return res.json({
+      success: true,
+      data: result,
+      message: "Content reports retrieved",
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function resolveContentReport(req, res, next) {
+  try {
+    const { decision, notes } = req.body;
+    const report = await adminService.resolveContentReport(
+      req.params.reportId,
+      decision,
+      notes,
+      req.user.id,
+    );
+    if (!report) throw new ApiError(404, "NOT_FOUND", "Report not found");
+    return res.json({
+      success: true,
+      data: report,
+      message: `Report ${decision === "DISMISS" ? "dismissed" : "resolved"}`,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ── J6: Reports & Analytics ────────────────────────────────
+export async function getOverviewReport(req, res, next) {
+  try {
+    const report = await adminService.getOverviewReport();
+    return res.json({
+      success: true,
+      data: report,
+      message: "Overview report retrieved",
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getApplicationsReport(req, res, next) {
+  try {
+    const report = await adminService.getApplicationsReport();
+    return res.json({
+      success: true,
+      data: report,
+      message: "Applications report retrieved",
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 // ── J7: Deletion Requests ──────────────────────────────────
 export async function listDeletionRequests(req, res, next) {
   try {
@@ -115,7 +178,6 @@ export async function listDeletionRequests(req, res, next) {
   }
 }
 
-// ── J7: Process Deletion ───────────────────────────────────
 export async function processDeletion(req, res, next) {
   try {
     const { decision } = req.body;
@@ -130,6 +192,39 @@ export async function processDeletion(req, res, next) {
       success: true,
       data: result,
       message: `Deletion request ${decision === "APPROVE" ? "approved" : "rejected"}`,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ── J8: System Settings ────────────────────────────────────
+export async function getSettings(req, res, next) {
+  try {
+    const settings = await adminService.getSettings();
+    return res.json({
+      success: true,
+      data: { settings },
+      message: "Settings retrieved",
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateSetting(req, res, next) {
+  try {
+    const { value } = req.body;
+    const setting = await adminService.updateSetting(
+      req.params.key,
+      value,
+      req.user.id,
+    );
+    if (!setting) throw new ApiError(404, "NOT_FOUND", "Setting not found");
+    return res.json({
+      success: true,
+      data: setting,
+      message: "Setting updated",
     });
   } catch (error) {
     next(error);

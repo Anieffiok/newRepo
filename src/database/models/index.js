@@ -31,6 +31,8 @@ import UserLearning from "./userLearning.model.js";
 import PrivacySetting from "./privacySetting.model.js";
 import DeletionRequest from "./deletionRequest.model.js";
 import AuditLog from "./auditLog.model.js";
+import ContentReport from "./contentReport.model.js";
+import SystemSetting from "./systemSetting.model.js";
 
 // ==========================================
 // 1. User & Profile (1:1)
@@ -424,6 +426,24 @@ AuditLog.belongsTo(User, {
   as: "admin",
 });
 
+// ContentReport associations
+ContentReport.belongsTo(User, {
+  as: "reporter",
+  foreignKey: "reporterId",
+});
+ContentReport.belongsTo(User, {
+  as: "reviewer",
+  foreignKey: "reviewedBy",
+});
+User.hasMany(ContentReport, {
+  as: "filedReports",
+  foreignKey: "reporterId",
+  onDelete: "CASCADE",
+});
+
+// SystemSetting associations
+SystemSetting.belongsTo(User, { as: "updater", foreignKey: "updatedBy" });
+
 // ==========================================
 // Exports
 // ==========================================
@@ -461,6 +481,8 @@ export {
   PrivacySetting,
   DeletionRequest,
   AuditLog,
+  ContentReport,
+  SystemSetting,
 };
 
 export default {
@@ -497,4 +519,6 @@ export default {
   PrivacySetting,
   DeletionRequest,
   AuditLog,
+  ContentReport,
+  SystemSetting,
 };
