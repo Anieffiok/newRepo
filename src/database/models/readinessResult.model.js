@@ -38,6 +38,11 @@ const ReadinessResult = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: false,
     },
+    aiGuidance: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: "ai_guidance",
+    },
   },
   {
     tableName: "readiness_results",

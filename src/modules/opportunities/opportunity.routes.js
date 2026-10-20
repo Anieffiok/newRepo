@@ -76,6 +76,7 @@ router.get(
  */
 router.get(
   "/:id",
+  authenticate,
   opportunityIdParamValidator,
   validate,
   asyncHandler(opportunityController.getOpportunity),

@@ -11,6 +11,7 @@ import {
   Skill,
 } from "../../database/models/index.js";
 import ApiError from "../../utils/ApiError.js";
+import aiService from "../ai/ai.service.js";
 import {
   buildProfileSnapshot,
   evaluateRequirement,
@@ -88,12 +89,38 @@ export async function analyseEligibility(userId, opportunityId) {
     opportunity.requirements,
   );
 
+  // 5b. AI interpretation (fails silently — rules engine result stands)
+  let aiInterpretation = null;
+  try {
+    aiInterpretation = await aiService.interpretEligibility(
+      {
+        title: opportunity.title,
+        organization: opportunity.organisation,
+        requirements: opportunity.requirements.map((r) => ({
+          type: r.type,
+          description: r.description,
+        })),
+      },
+      {
+        degree: education[0]?.degree || "Not provided",
+        discipline: education[0]?.fieldOfStudy || "Not provided",
+        skills: userSkills.map((s) => s.skill?.name).filter(Boolean),
+        experienceYears: experiences.length,
+        country: profile?.country || "Nigeria",
+      },
+      { overallMatch: label },
+    );
+  } catch {
+    // AI failure is silent
+  }
+
   // 6. Upsert the eligibility result (update if exists, create if new)
   const [eligibilityResult] = await EligibilityResult.upsert({
     userId,
     opportunityId,
     matchLabel: label,
     summary,
+    aiInterpretation,
   });
 
   // 7. Delete old items and create new ones

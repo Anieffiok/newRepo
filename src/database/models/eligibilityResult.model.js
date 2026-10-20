@@ -35,6 +35,11 @@ const EligibilityResult = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: false,
     },
+    aiInterpretation: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: "ai_interpretation",
+    },
   },
   {
     tableName: "eligibility_results",

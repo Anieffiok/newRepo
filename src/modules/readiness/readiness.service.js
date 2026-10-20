@@ -14,6 +14,7 @@ import {
   Skill,
 } from "../../database/models/index.js";
 import ApiError from "../../utils/ApiError.js";
+import aiService from "../ai/ai.service.js";
 import * as eligibilityService from "../eligibility/eligibility.service.js";
 
 /**
@@ -125,6 +126,26 @@ export async function analyseReadiness(userId, opportunityId) {
       profileSection: null,
     });
   }
+  // 5b. AI guidance (fails silently — structured items stand on their own)
+  let aiGuidance = null;
+  const pendingItems = items.filter((i) => i.status === "PENDING");
+  if (pendingItems.length > 0) {
+    try {
+      aiGuidance = await aiService.generateReadinessGuidance(
+        pendingItems.map((i) => ({
+          type: i.itemType,
+          title: i.title,
+          description: i.description,
+        })),
+        {
+          degree: profile?.degree || "Not provided",
+          skills: userSkills.map((s) => s.skill?.name).filter(Boolean),
+        },
+      );
+    } catch {
+      // AI failure is silent
+    }
+  }
 
   // 6. Determine overall readiness state
   const state = determineReadinessState(items, eligibility);
@@ -137,6 +158,7 @@ export async function analyseReadiness(userId, opportunityId) {
     eligibilityResultId: eligibility.id,
     state,
     summary,
+    aiGuidance,
   });
 
   // 8. Replace old items with new ones

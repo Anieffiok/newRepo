@@ -3,7 +3,12 @@ import {
   Opportunity,
   OpportunityRequirement,
   SavedOpportunity,
+  Profile,
+  Education,
+  UserSkill,
+  Skill,
 } from "../../database/models/index.js";
+import aiService from "../ai/ai.service.js";
 import ApiError from "../../utils/ApiError.js";
 
 // ─── List Opportunities (D1) ──────────────────────────────────────
@@ -125,10 +130,46 @@ export async function getOpportunityById(opportunityId, userId) {
     daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
   }
 
+  // AI match explanation (on-the-fly, fails silently)
+  let aiMatchExplanation = null;
+  if (userId) {
+    try {
+      const [profile, education, userSkills] = await Promise.all([
+        Profile.findOne({ where: { userId } }),
+        Education.findOne({
+          where: { userId },
+          order: [["endDate", "DESC NULLS LAST"]],
+        }),
+        UserSkill.findAll({
+          where: { userId },
+          include: [{ model: Skill, as: "skill", attributes: ["name"] }],
+        }),
+      ]);
+
+      aiMatchExplanation = await aiService.explainOpportunityMatch(
+        {
+          title: opportunity.title,
+          organization: opportunity.organisation,
+          type: opportunity.type,
+          applicationDeadline: opportunity.deadline,
+        },
+        {
+          degree: education?.degree || "Not provided",
+          skills: userSkills.map((s) => s.skill?.name).filter(Boolean),
+          careerLevel: opportunity.careerLevel || "Not specified",
+          country: profile?.country || "Nigeria",
+        },
+      );
+    } catch {
+      // AI failure is silent
+    }
+  }
+
   return {
     ...opportunity.toJSON(),
     isSaved,
     daysRemaining,
+    aiMatchExplanation,
   };
 }
 
