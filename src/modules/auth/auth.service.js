@@ -20,6 +20,20 @@ import {
 } from "../../utils/email.js";
 import ApiError from "../../utils/ApiError.js";
 import env from "../../config/env.js";
+import logger from "../../config/logger.js";
+
+function toEmailDeliveryError(action, error) {
+  logger.error(
+    { err: error?.message || error, action },
+    "Email delivery failed",
+  );
+
+  throw new ApiError(
+    503,
+    "EMAIL_DELIVERY_FAILED",
+    `We couldn't send the ${action} email right now. Please try again later.`,
+  );
+}
 
 /**
  * Register a new user, create an empty profile, and generate a verification token
@@ -72,12 +86,18 @@ export async function register({ email, password, firstName, lastName }) {
     return { user, profile };
   });
 
-  // Send verification email asynchronously (do not block registration response if SMTP fails)
+  // Send verification email asynchronously without blocking registration. Log and swallow
+  // failures here so the response remains explicit and the promise is handled.
   const verificationUrl = `${env.frontendUrl}/verify-email?token=${rawVerificationToken}`;
-  sendVerificationEmail({
+  void sendVerificationEmail({
     to: result.user.email,
     firstName: result.user.firstName,
     verificationUrl,
+  }).catch((error) => {
+    logger.error(
+      { err: error?.message || error, email: result.user.email },
+      "Verification email could not be sent during registration",
+    );
   });
 
   // Generate session tokens
@@ -186,11 +206,16 @@ export async function resendVerification(email) {
   });
 
   const verificationUrl = `${env.frontendUrl}/verify-email?token=${rawVerificationToken}`;
-  await sendVerificationEmail({
-    to: user.email,
-    firstName: user.firstName,
-    verificationUrl,
-  });
+
+  try {
+    await sendVerificationEmail({
+      to: user.email,
+      firstName: user.firstName,
+      verificationUrl,
+    });
+  } catch (error) {
+    toEmailDeliveryError("verification", error);
+  }
 }
 
 export async function login({ email, password }) {
@@ -332,11 +357,14 @@ export async function forgotPassword(email) {
   // Construct reset URL for the frontend
   const resetUrl = `${env.frontendUrl}/reset-password?token=${rawResetToken}`;
 
-  // Send the email (or log to terminal if SMTP not yet configured)
-  await sendPasswordResetEmail({
-    to: user.email,
-    resetUrl,
-  });
+  try {
+    await sendPasswordResetEmail({
+      to: user.email,
+      resetUrl,
+    });
+  } catch (error) {
+    toEmailDeliveryError("password reset", error);
+  }
 }
 
 /**

@@ -17,6 +17,7 @@ import { hashToken } from "../../utils/tokens.js";
 import { sendVerificationEmail } from "../../utils/email.js";
 import ApiError from "../../utils/ApiError.js";
 import env from "../../config/env.js";
+import logger from "../../config/logger.js";
 
 /**
  * Update user account info (names, email).
@@ -73,10 +74,15 @@ export async function updateMe(userId, { firstName, lastName, email }) {
 
   if (emailChanged) {
     const verificationUrl = `${env.frontendUrl}/verify-email?token=${rawVerificationToken}`;
-    sendVerificationEmail({
+    void sendVerificationEmail({
       to: user.email,
       firstName: user.firstName,
       verificationUrl,
+    }).catch((error) => {
+      logger.error(
+        { err: error?.message || error, email: user.email },
+        "Verification email could not be sent after profile update",
+      );
     });
   }
 

@@ -33,11 +33,9 @@ if (isConfigured) {
  */
 export async function sendPasswordResetEmail({ to, resetUrl }) {
   if (!isConfigured || !transporter) {
-    logger.warn(
-      { to, resetUrl },
-      "SMTP not configured. Reset link printed to terminal",
-    );
-    return;
+    const message = "SMTP is not configured; password reset email could not be sent";
+    logger.error({ to, resetUrl }, message);
+    throw new Error(message);
   }
 
   const mailOptions = {
@@ -99,6 +97,7 @@ export async function sendPasswordResetEmail({ to, resetUrl }) {
       { err: error.message, to, resetUrl },
       "Failed to send password reset email via SMTP",
     );
+    throw new Error("Failed to send password reset email via SMTP");
   }
 }
 
@@ -111,11 +110,9 @@ export async function sendVerificationEmail({
   verificationUrl,
 }) {
   if (!isConfigured || !transporter) {
-    logger.warn(
-      { to, verificationUrl },
-      "SMTP not configured. Verification link printed to terminal",
-    );
-    return;
+    const message = "SMTP is not configured; verification email could not be sent";
+    logger.error({ to, verificationUrl }, message);
+    throw new Error(message);
   }
 
   const mailOptions = {
