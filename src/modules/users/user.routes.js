@@ -84,7 +84,7 @@ router.get("/export", asyncHandler(userController.exportUserData));
  *                 format: password
  *     responses:
  *       200:
- *         description: Account deactivated
+ *         description: Account and all data permanently deleted
  *       401:
  *         description: Incorrect password
  */

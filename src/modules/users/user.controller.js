@@ -38,6 +38,6 @@ export async function deleteMe(req, res) {
   return res.status(200).json({
     success: true,
     data: null,
-    message: "Your account has been deactivated successfully.",
+    message: "Your account and all of your data have been permanently deleted.",
   });
 }

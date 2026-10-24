@@ -26,15 +26,3 @@ export const updatePrivacyValidator = [
     .isBoolean()
     .withMessage("showApplications must be true or false"),
 ];
-
-export const deletionRequestValidator = [
-  body("reason")
-    .optional()
-    .isString()
-    .isLength({ max: 500 })
-    .withMessage("Reason must be a string of 500 characters or less"),
-];
-
-export const deletionIdParamValidator = [
-  param("id").isUUID().withMessage("Request ID must be a valid UUID"),
-];

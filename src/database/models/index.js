@@ -29,7 +29,6 @@ import PracticeSession from "./practiceSession.model.js";
 import LearningResource from "./learningResource.model.js";
 import UserLearning from "./userLearning.model.js";
 import PrivacySetting from "./privacySetting.model.js";
-import DeletionRequest from "./deletionRequest.model.js";
 import AuditLog from "./auditLog.model.js";
 import ContentReport from "./contentReport.model.js";
 import SystemSetting from "./systemSetting.model.js";
@@ -405,16 +404,6 @@ PrivacySetting.belongsTo(User, {
   as: "user",
 });
 
-User.hasMany(DeletionRequest, {
-  foreignKey: "userId",
-  as: "deletionRequests",
-  onDelete: "CASCADE",
-});
-DeletionRequest.belongsTo(User, {
-  foreignKey: "userId",
-  as: "user",
-});
-
 // Audit Logs
 User.hasMany(AuditLog, {
   foreignKey: "adminId",
@@ -479,7 +468,6 @@ export {
   UserLearning,
   LearningResource,
   PrivacySetting,
-  DeletionRequest,
   AuditLog,
   ContentReport,
   SystemSetting,
@@ -517,7 +505,6 @@ export default {
   UserLearning,
   LearningResource,
   PrivacySetting,
-  DeletionRequest,
   AuditLog,
   ContentReport,
   SystemSetting,

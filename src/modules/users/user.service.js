@@ -11,7 +11,9 @@ import {
   Interest,
   RefreshToken,
   EmailVerificationToken,
+  Document,
 } from "../../database/models/index.js";
+import { deleteFileFromStorage } from "../../utils/storage.js";
 import { verifyPassword } from "../../utils/password.js";
 import { hashToken } from "../../utils/tokens.js";
 import { sendVerificationEmail } from "../../utils/email.js";
@@ -147,7 +149,9 @@ export async function exportUserData(userId) {
 }
 
 /**
- * Deactivate user account and revoke all sessions (Screen I2)
+ * Permanently delete the user account and all of their data.
+ * Requires the current password. Database rows are removed by the
+ * ON DELETE CASCADE foreign keys. Uploaded files are removed from storage.
  */
 export async function deleteMe(userId, password) {
   const user = await User.scope("withPassword").findByPk(userId);
@@ -164,15 +168,29 @@ export async function deleteMe(userId, password) {
     );
   }
 
-  await sequelize.transaction(async (t) => {
-    // 1. Mark account deactivated
-    user.accountStatus = "DEACTIVATED";
-    await user.save({ transaction: t });
-
-    // 2. Revoke all refresh tokens (log out everywhere)
-    await RefreshToken.update(
-      { revokedAt: new Date() },
-      { where: { userId, revokedAt: null }, transaction: t },
-    );
+  // Collect the storage keys of uploaded files before the rows are removed
+  const documents = await Document.findAll({
+    where: { userId },
+    attributes: ["storageKey"],
   });
+  const storageKeys = documents.map((doc) => doc.storageKey).filter(Boolean);
+
+  // Removing the user deletes related rows (profile, education, experience,
+  // certifications, goals, interests, skills, documents, applications,
+  // eligibility and readiness results, notifications, saved opportunities,
+  // practice sessions, learning progress, privacy settings, tokens and
+  // notification preferences) through ON DELETE CASCADE.
+  await user.destroy();
+
+  // Remove uploaded files. The account is already gone, so failures are logged only.
+  for (const key of storageKeys) {
+    try {
+      await deleteFileFromStorage(key);
+    } catch (error) {
+      logger.error(
+        { err: error?.message || error, key },
+        "Failed to delete stored file for a deleted account",
+      );
+    }
+  }
 }

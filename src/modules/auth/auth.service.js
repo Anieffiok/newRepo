@@ -214,7 +214,7 @@ export async function resendVerification(email) {
       verificationUrl,
     });
   } catch (error) {
-    toEmailDeliveryError("verification", error);
+    logger.error({ err: error?.message || error }, "Verification email failed");
   }
 }
 
@@ -363,7 +363,10 @@ export async function forgotPassword(email) {
       resetUrl,
     });
   } catch (error) {
-    toEmailDeliveryError("password reset", error);
+    logger.error(
+      { err: error?.message || error },
+      "Password reset email failed",
+    );
   }
 }
 
