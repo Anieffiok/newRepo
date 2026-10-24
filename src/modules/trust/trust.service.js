@@ -14,7 +14,6 @@ import {
   PracticeSession,
   UserLearning,
   PrivacySetting,
-  DeletionRequest,
 } from "../../database/models/index.js";
 import ApiError from "../../utils/ApiError.js";
 
@@ -236,59 +235,4 @@ export async function updatePrivacySettings(userId, updates) {
 
   await settings.save();
   return settings;
-}
-
-// ─── I4: Data Deletion ───────────────────────────────────────────
-
-/**
- * Request full account and data deletion.
- * Creates a pending request — does not delete immediately.
- */
-export async function requestDeletion(userId, reason) {
-  // Check for existing pending request
-  const existing = await DeletionRequest.findOne({
-    where: { userId, status: "PENDING" },
-  });
-
-  if (existing) {
-    throw new ApiError(
-      409,
-      "CONFLICT",
-      "You already have a pending deletion request",
-    );
-  }
-
-  return DeletionRequest.create({
-    userId,
-    reason: reason || null,
-    status: "PENDING",
-  });
-}
-
-/**
- * Cancel a pending deletion request.
- */
-export async function cancelDeletion(userId, requestId) {
-  const request = await DeletionRequest.findOne({
-    where: { id: requestId, userId, status: "PENDING" },
-  });
-
-  if (!request) {
-    throw new ApiError(404, "NOT_FOUND", "Pending deletion request not found");
-  }
-
-  request.status = "CANCELLED";
-  await request.save();
-
-  return request;
-}
-
-/**
- * Get the status of the user's deletion requests.
- */
-export async function getDeletionStatus(userId) {
-  return DeletionRequest.findAll({
-    where: { userId },
-    order: [["created_at", "DESC"]],
-  });
 }

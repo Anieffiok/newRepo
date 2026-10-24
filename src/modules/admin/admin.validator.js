@@ -30,12 +30,6 @@ export const setActiveStatusValidator = [
   body("isActive").isBoolean().withMessage("isActive must be true or false"),
 ];
 
-export const processDeletionValidator = [
-  body("decision")
-    .isIn(["APPROVE", "REJECT"])
-    .withMessage("Decision must be APPROVE or REJECT"),
-];
-
 export const resolveReportValidator = [
   body("decision")
     .isIn(["RESOLVE", "DISMISS"])

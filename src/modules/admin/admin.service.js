@@ -2,7 +2,6 @@ import {
   User,
   Opportunity,
   Application,
-  DeletionRequest,
   AuditLog,
   Profile,
   ContentReport,
@@ -18,9 +17,6 @@ export async function getDashboardStats() {
     where: { verificationStatus: "UNVERIFIED" },
   });
   const totalApplications = await Application.count();
-  const pendingDeletions = await DeletionRequest.count({
-    where: { status: "PENDING" },
-  });
   const recentUsers = await User.findAll({
     attributes: ["id", "email", "role", "createdAt"],
     order: [["created_at", "DESC"]],
@@ -34,7 +30,6 @@ export async function getDashboardStats() {
       pendingVerification: pendingVerifications,
     },
     applications: { total: totalApplications },
-    deletionRequests: { pending: pendingDeletions },
     recentUsers,
   };
 }
@@ -185,7 +180,6 @@ export async function getOverviewReport() {
     totalOpportunities,
     verifiedOpportunities,
     totalApplications,
-    pendingDeletions,
     pendingReports,
   ] = await Promise.all([
     User.count(),
@@ -193,7 +187,6 @@ export async function getOverviewReport() {
     Opportunity.count(),
     Opportunity.count({ where: { verificationStatus: "VERIFIED" } }),
     Application.count(),
-    DeletionRequest.count({ where: { status: "PENDING" } }),
     ContentReport.count({ where: { status: "PENDING" } }),
   ]);
 
@@ -226,7 +219,7 @@ export async function getOverviewReport() {
       verified: verifiedOpportunities,
     },
     applications: { total: totalApplications, byStatus: applicationsByStatus },
-    moderation: { pendingDeletions, pendingReports },
+    moderation: { pendingReports },
   };
 }
 
@@ -247,51 +240,6 @@ export async function getApplicationsReport() {
   });
 
   return { byStage, byOutcome };
-}
-
-// ── J7: Deletion Requests ──────────────────────────────────
-export async function listDeletionRequests() {
-  return DeletionRequest.findAll({
-    where: { status: "PENDING" },
-    include: [
-      {
-        model: User,
-        as: "user",
-        attributes: ["id", "email", "firstName", "lastName"],
-      },
-    ],
-    order: [["created_at", "ASC"]],
-  });
-}
-
-export async function processDeletion(requestId, decision, adminId) {
-  const request = await DeletionRequest.findByPk(requestId);
-  if (!request) return null;
-
-  if (decision === "APPROVE") {
-    request.status = "COMPLETED";
-    request.processedAt = new Date();
-    await request.save();
-
-    const user = await User.findByPk(request.userId);
-    if (user) await user.destroy();
-
-    await logAction(adminId, "APPROVE_DELETION", "User", request.userId, {});
-  } else {
-    request.status = "CANCELLED";
-    request.processedAt = new Date();
-    await request.save();
-
-    await logAction(
-      adminId,
-      "REJECT_DELETION",
-      "DeletionRequest",
-      requestId,
-      {},
-    );
-  }
-
-  return request;
 }
 
 // ── J8: System Settings ────────────────────────────────────

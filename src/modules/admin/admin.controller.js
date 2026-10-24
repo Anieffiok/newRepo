@@ -164,40 +164,6 @@ export async function getApplicationsReport(req, res, next) {
   }
 }
 
-// ── J7: Deletion Requests ──────────────────────────────────
-export async function listDeletionRequests(req, res, next) {
-  try {
-    const requests = await adminService.listDeletionRequests();
-    return res.json({
-      success: true,
-      data: { requests },
-      message: "Deletion requests retrieved",
-    });
-  } catch (error) {
-    next(error);
-  }
-}
-
-export async function processDeletion(req, res, next) {
-  try {
-    const { decision } = req.body;
-    const result = await adminService.processDeletion(
-      req.params.requestId,
-      decision,
-      req.user.id,
-    );
-    if (!result)
-      throw new ApiError(404, "NOT_FOUND", "Deletion request not found");
-    return res.json({
-      success: true,
-      data: result,
-      message: `Deletion request ${decision === "APPROVE" ? "approved" : "rejected"}`,
-    });
-  } catch (error) {
-    next(error);
-  }
-}
-
 // ── J8: System Settings ────────────────────────────────────
 export async function getSettings(req, res, next) {
   try {

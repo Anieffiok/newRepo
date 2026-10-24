@@ -6,12 +6,10 @@ import * as ctrl from "./admin.controller.js";
 import {
   userIdParamValidator,
   opportunityIdParamValidator,
-  requestIdParamValidator,
   reportIdParamValidator,
   settingKeyParamValidator,
   verifyOpportunityValidator,
   setActiveStatusValidator,
-  processDeletionValidator,
   resolveReportValidator,
   updateSettingValidator,
   listUsersValidator,
@@ -287,60 +285,6 @@ router.get(
   "/reports/applications",
   requireRole("ADMIN", "OPERATIONS"),
   ctrl.getApplicationsReport,
-);
-
-/**
- * @swagger
- * /api/v1/admin/deletions:
- *   get:
- *     summary: List pending account deletion requests
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Deletion requests retrieved
- */
-router.get(
-  "/deletions",
-  requireRole("ADMIN", "OPERATIONS"),
-  ctrl.listDeletionRequests,
-);
-
-/**
- * @swagger
- * /api/v1/admin/deletions/{requestId}/process:
- *   post:
- *     summary: Approve or reject a deletion request
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: requestId
- *         required: true
- *         schema: { type: string, format: uuid }
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               decision:
- *                 type: string
- *                 enum: [APPROVE, REJECT]
- *     responses:
- *       200:
- *         description: Deletion request processed
- */
-router.post(
-  "/deletions/:requestId/process",
-  requireRole("ADMIN", "OPERATIONS"),
-  requestIdParamValidator,
-  processDeletionValidator,
-  validate,
-  ctrl.processDeletion,
 );
 
 /**
