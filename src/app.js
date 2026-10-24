@@ -14,6 +14,7 @@ import notFound from "./middleware/notFound.js";
 import routes from "./routes/index.js";
 
 const app = express();
+app.set("trust proxy", 1);
 
 // 1. Security headers
 app.disable("x-powered-by");
