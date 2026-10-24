@@ -6,9 +6,6 @@ import {
   ReadinessResult,
   ReadinessItem,
   Profile,
-  Education,
-  Experience,
-  Certification,
   Document,
   UserSkill,
   Skill,
@@ -85,13 +82,7 @@ export async function analyseReadiness(userId, opportunityId) {
       continue;
 
     // Convert each gap into an actionable item
-    const readinessItem = buildReadinessItem(
-      item,
-      req,
-      profile,
-      documents,
-      userSkills,
-    );
+    const readinessItem = buildReadinessItem(item, req);
     if (readinessItem) {
       items.push(readinessItem);
     }
@@ -181,13 +172,7 @@ export async function analyseReadiness(userId, opportunityId) {
 /**
  * Convert an eligibility gap into a readiness action item.
  */
-function buildReadinessItem(
-  eligibilityItem,
-  requirement,
-  profile,
-  documents,
-  userSkills,
-) {
+function buildReadinessItem(eligibilityItem, requirement) {
   const { result, reason } = eligibilityItem;
   const reqType = requirement.type;
   const desc = requirement.description;

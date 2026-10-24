@@ -15,7 +15,6 @@ import {
   UserLearning,
   PrivacySetting,
 } from "../../database/models/index.js";
-import ApiError from "../../utils/ApiError.js";
 
 // ─── I1: Trust Report ────────────────────────────────────────────
 

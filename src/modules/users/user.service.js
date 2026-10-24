@@ -9,7 +9,6 @@ import {
   Certification,
   CareerGoal,
   Interest,
-  RefreshToken,
   EmailVerificationToken,
   Document,
 } from "../../database/models/index.js";

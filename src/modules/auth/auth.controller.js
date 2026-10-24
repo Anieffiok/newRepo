@@ -1,8 +1,6 @@
 import env from "../../config/env.js";
 import * as authService from "./auth.service.js";
 
-const isProduction = process.env.NODE_ENV === "production";
-
 const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: env.cookie.secure,

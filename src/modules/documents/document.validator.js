@@ -14,7 +14,7 @@ const ALLOWED_MIME_TYPES = [
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB limit per file
 
-export const uploadMiddleware = multer({
+const singleFileUpload = multer({
   storage,
   limits: { fileSize: MAX_FILE_SIZE },
   fileFilter: (req, file, cb) => {
@@ -32,6 +32,19 @@ export const uploadMiddleware = multer({
     }
   },
 }).single("file"); // Expects single file upload under form-data key "file"
+
+// Wrap multer so an oversized file returns a 400 ApiError instead of a 500
+export function uploadMiddleware(req, res, next) {
+  singleFileUpload(req, res, (err) => {
+    if (!err) return next();
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return next(
+        new ApiError(400, "FILE_TOO_LARGE", "File must be 5 MB or smaller"),
+      );
+    }
+    return next(err);
+  });
+}
 
 export const createDocumentValidator = [
   body("documentType")

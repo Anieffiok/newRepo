@@ -99,7 +99,7 @@ describe("GET /api/v1/users/export", () => {
 // DELETE /users/me
 // ==============================
 describe("DELETE /api/v1/users/me", () => {
-  it("should deactivate account with correct password", async () => {
+  it("should permanently delete account with correct password", async () => {
     const res = await request(app)
       .delete("/api/v1/users/me")
       .set("Authorization", `Bearer ${accessToken}`)
@@ -108,9 +108,9 @@ describe("DELETE /api/v1/users/me", () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
 
-    // Verify account is deactivated
+    // Verify account is permanently removed
     const user = await User.findOne({ where: { email: "stage1@rovia.app" } });
-    expect(user.accountStatus).toBe("DEACTIVATED");
+    expect(user).toBeNull();
   });
 
   it("should reject wrong password", async () => {

@@ -67,8 +67,8 @@ router.get("/export", asyncHandler(userController.exportUserData));
  * @swagger
  * /users/me:
  *   delete:
- *     summary: Deactivate user account
- *     description: Requires current password to confirm account deactivation and session revocation.
+ *     summary: Permanently delete user account
+ *     description: Requires the current password. Immediately and permanently deletes the account, all of its data and stored files. This cannot be undone.
  *     tags: [Users & Account]
  *     requestBody:
  *       required: true

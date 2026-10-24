@@ -22,19 +22,6 @@ import ApiError from "../../utils/ApiError.js";
 import env from "../../config/env.js";
 import logger from "../../config/logger.js";
 
-function toEmailDeliveryError(action, error) {
-  logger.error(
-    { err: error?.message || error, action },
-    "Email delivery failed",
-  );
-
-  throw new ApiError(
-    503,
-    "EMAIL_DELIVERY_FAILED",
-    `We couldn't send the ${action} email right now. Please try again later.`,
-  );
-}
-
 /**
  * Register a new user, create an empty profile, and generate a verification token
  */
