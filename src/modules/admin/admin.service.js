@@ -269,7 +269,7 @@ export async function processDeletion(requestId, decision, adminId) {
   if (!request) return null;
 
   if (decision === "APPROVE") {
-    request.status = "APPROVED";
+    request.status = "COMPLETED";
     request.processedAt = new Date();
     await request.save();
 
@@ -278,7 +278,7 @@ export async function processDeletion(requestId, decision, adminId) {
 
     await logAction(adminId, "APPROVE_DELETION", "User", request.userId, {});
   } else {
-    request.status = "REJECTED";
+    request.status = "CANCELLED";
     request.processedAt = new Date();
     await request.save();
 

@@ -62,7 +62,7 @@ export function evaluateRequirement(requirement, profile) {
 
   switch (type) {
     case "DEGREE":
-      return evaluateDegree(descLower, profile);
+      return evaluateDegree(descLower, profile, description);
     case "DISCIPLINE":
       return evaluateDiscipline(descLower, acceptsAnyDiscipline, profile);
     case "SKILLS":
@@ -70,11 +70,11 @@ export function evaluateRequirement(requirement, profile) {
     case "EXPERIENCE":
       return evaluateExperience(descLower, profile);
     case "CERTIFICATIONS":
-      return evaluateCertifications(descLower, profile);
+      return evaluateCertifications(descLower, profile, description);
     case "LOCATION":
-      return evaluateLocation(descLower, profile);
+      return evaluateLocation(descLower, profile, description);
     case "OTHER":
-      return evaluateOther(descLower, profile);
+      return evaluateOther(descLower, profile, description);
     default:
       return {
         result: "INFORMATION_NEEDED",
@@ -87,7 +87,7 @@ export function evaluateRequirement(requirement, profile) {
 
 // ─── Individual Evaluators ────────────────────────────────────────
 
-function evaluateDegree(descLower, profile) {
+function evaluateDegree(descLower, profile, description) {
   if (!profile.hasEducation) {
     return {
       result: "INFORMATION_NEEDED",
@@ -380,7 +380,7 @@ function evaluateExperience(descLower, profile) {
   };
 }
 
-function evaluateCertifications(descLower, profile) {
+function evaluateCertifications(descLower, profile, description) {
   if (profile.certNames.length === 0) {
     return {
       result: "INFORMATION_NEEDED",
@@ -413,7 +413,7 @@ function evaluateCertifications(descLower, profile) {
   };
 }
 
-function evaluateLocation(descLower, profile) {
+function evaluateLocation(descLower, profile, description) {
   if (!profile.country && !profile.location) {
     return {
       result: "INFORMATION_NEEDED",
@@ -460,7 +460,7 @@ function evaluateLocation(descLower, profile) {
   };
 }
 
-function evaluateOther(descLower, profile) {
+function evaluateOther(descLower, profile, description) {
   // "Other" requirements are too varied to automate reliably.
   // Always flag as Information Needed so the user can self-assess.
   return {
