@@ -6,7 +6,6 @@ import {
   User,
   Application,
   ApplicationStage,
-  Opportunity,
 } from "../../src/database/models/index.js";
 
 let accessToken;
@@ -146,7 +145,6 @@ describe("Application endpoints", () => {
       .set("Authorization", `Bearer ${accessToken}`)
       .send({ opportunityId: opportunity.id });
     const applicationId = createResponse.body.data.id;
-    const stage = createResponse.body.data.stages[0];
 
     const addStageResponse = await request(app)
       .post(`/api/v1/applications/${applicationId}/stages`)

@@ -47,7 +47,7 @@ export async function generatePractice(userId, opportunityId) {
   }
 
   // Gather user profile for context
-  const [profile, education, userSkills] = await Promise.all([
+  const [, education, userSkills] = await Promise.all([
     Profile.findOne({ where: { userId } }),
     Education.findOne({
       where: { userId },
@@ -171,7 +171,7 @@ function parseQuestions(rawOutput) {
 
   for (const line of lines) {
     // Match numbered patterns: "1. ", "1) ", "1 - "
-    const match = line.match(/^\d+[\.\)\-]\s*(.+)/);
+    const match = line.match(/^\d+[.)-]\s*(.+)/);
     if (match) {
       const questionText = match[1].trim();
       // Must end with ? and be a reasonable length
@@ -186,7 +186,7 @@ function parseQuestions(rawOutput) {
     questions.length = 0; // Reset
     for (const line of lines) {
       const cleaned = line
-        .replace(/^\d+[\.\)\-]\s*/, "")
+        .replace(/^\d+[.)-]\s*/, "")
         .replace(/^[-•]\s*/, "")
         .trim();
       if (

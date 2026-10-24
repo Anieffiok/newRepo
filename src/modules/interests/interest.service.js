@@ -94,7 +94,7 @@ export async function addUserInterest(userId, name, category = null) {
       transaction: t,
     });
 
-    const [userInterest, created] = await UserInterest.findOrCreate({
+    const [, created] = await UserInterest.findOrCreate({
       where: { userId, interestId: interest.id },
       defaults: { userId, interestId: interest.id },
       transaction: t,

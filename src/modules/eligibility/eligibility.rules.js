@@ -57,7 +57,7 @@ export function buildProfileSnapshot(
  * Returns { result, reason, userInfoUsed }
  */
 export function evaluateRequirement(requirement, profile) {
-  const { type, description, isRequired, acceptsAnyDiscipline } = requirement;
+  const { type, description, acceptsAnyDiscipline } = requirement;
   const descLower = description.toLowerCase();
 
   switch (type) {

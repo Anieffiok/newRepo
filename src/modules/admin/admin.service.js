@@ -7,7 +7,7 @@ import {
   ContentReport,
   SystemSetting,
 } from "../../database/models/index.js";
-import { fn, col, literal } from "sequelize";
+import { fn, col } from "sequelize";
 
 // ── J1: Dashboard ──────────────────────────────────────────
 export async function getDashboardStats() {

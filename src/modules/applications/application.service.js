@@ -167,7 +167,7 @@ export async function addStage(applicationId, userId, data) {
   });
   const nextOrder = (lastStage?.sortOrder || 0) + 1;
 
-  const stage = await ApplicationStage.create({
+  await ApplicationStage.create({
     applicationId,
     stageType: data.stageType,
     status: data.status || "PLANNED",

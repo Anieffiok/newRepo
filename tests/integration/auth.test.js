@@ -9,8 +9,6 @@ import {
   PasswordResetToken,
 } from "../../src/database/models/index.js";
 
-let testUserToken;
-
 beforeAll(async () => {
   await sequelize.authenticate();
 });

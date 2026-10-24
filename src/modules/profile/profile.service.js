@@ -18,15 +18,7 @@ import ApiError from "../../utils/ApiError.js";
  *  3. Career Level (profile.careerLevel is set)
  */
 function calculateProfileCompletion(data) {
-  const {
-    profile,
-    education,
-    careerGoals,
-    skills,
-    experiences,
-    certifications,
-    interests,
-  } = data;
+  const { profile, education, careerGoals } = data;
   const missingSteps = [];
   let score = 0;
 
