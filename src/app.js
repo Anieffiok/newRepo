@@ -55,10 +55,8 @@ if (env.nodeEnv !== "test") {
   );
 }
 
-// Swagger API Documentation (only in development and staging)
-if (env.nodeEnv !== "production") {
-  setupSwagger(app);
-}
+// Swagger API Documentation (production is protected by DOCS_USER / DOCS_PASSWORD)
+setupSwagger(app);
 
 // 6. API routes
 app.use("/api/v1", routes);

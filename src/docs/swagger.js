@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 
@@ -13,19 +14,20 @@ const swaggerDefinition = {
       "RESTful API for the Rovia career growth platform. Handles user authentication, profile management, education, skills, experience, certifications, career goals, and interests.",
     contact: {
       name: "Rovia Engineering Team",
-      email: "engineering@rovia.app",
+      email: "teamrovia@gmail.com",
     },
   },
+  // "Try it out" sends requests to the URL below.
+  // Set API_BASE_URL on the host (e.g. https://your-api-host/api/v1).
+  // Falls back to localhost when it is not set.
   servers: [
     {
-      url: "http://localhost:5000/api/v1",
-      description: "Local development server",
+      url: process.env.API_BASE_URL || "http://localhost:5000/api/v1",
+      description:
+        process.env.NODE_ENV === "production"
+          ? "Production server"
+          : "Local development server",
     },
-    // You will add your production URL here later, e.g.:
-    // {
-    //   url: 'https://api.rovia.app/api/v1',
-    //   description: 'Production server',
-    // },
   ],
   components: {
     securitySchemes: {
@@ -61,14 +63,60 @@ const options = {
 const swaggerSpec = swaggerJsdoc(options);
 
 // ==========================================
-// 4. Setup Function to Mount Swagger on Express App
+// 4. Password Protection for the Docs
+// ==========================================
+// Set DOCS_USER and DOCS_PASSWORD on the host to protect /api-docs.
+// - In production with no password set: the docs return 404 (hidden).
+// - Outside production with no password set: the docs are open (local dev).
+function safeEqual(a, b) {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
+function requireDocsLogin(req, res, next) {
+  const user = process.env.DOCS_USER;
+  const pass = process.env.DOCS_PASSWORD;
+
+  if (!user || !pass) {
+    if (process.env.NODE_ENV === "production") {
+      return res.status(404).end();
+    }
+    return next();
+  }
+
+  const [scheme, encoded] = (req.headers.authorization || "").split(" ");
+  if (scheme === "Basic" && encoded) {
+    const decoded = Buffer.from(encoded, "base64").toString();
+    const separator = decoded.indexOf(":");
+    if (separator !== -1) {
+      const givenUser = decoded.slice(0, separator);
+      const givenPass = decoded.slice(separator + 1);
+      if (safeEqual(givenUser, user) && safeEqual(givenPass, pass)) {
+        return next();
+      }
+    }
+  }
+
+  res.set("WWW-Authenticate", 'Basic realm="Rovia API docs"');
+  return res.status(401).send("Authentication required");
+}
+
+// ==========================================
+// 5. Setup Function to Mount Swagger on Express App
 // ==========================================
 export function setupSwagger(app) {
-  // Serve the interactive Swagger UI at /api-docs
-  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  // Serve the interactive Swagger UI at /api-docs (password protected)
+  app.use(
+    "/api-docs",
+    requireDocsLogin,
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec),
+  );
 
-  // Also expose the raw OpenAPI JSON at /api-docs.json (useful for code generation tools)
-  app.get("/api-docs.json", (req, res) => {
+  // Raw OpenAPI JSON at /api-docs.json (same password; useful for code generation tools)
+  app.get("/api-docs.json", requireDocsLogin, (req, res) => {
     res.setHeader("Content-Type", "application/json");
     res.send(swaggerSpec);
   });
